@@ -1,65 +1,130 @@
+"use client";
+
+import { useState } from "react";
+import Link from "next/link";
 import Image from "next/image";
 
 export default function Home() {
-  return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
+  const [opened, setOpened] = useState(false);
+
+  if (!opened) {
+    return (
+      <div className="relative flex min-h-screen flex-col items-center justify-center px-8 overflow-hidden">
+        {/* Sunlit linen — image 2 */}
         <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
+          src="/images/50986ae64c1d68d87e73c1a11e58150f.jpg"
+          alt=""
+          fill
+          className="object-cover object-center"
           priority
         />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+        {/* Light wash so text is legible without killing the photo */}
+        <div className="absolute inset-0 bg-[#f5f0ec]/60" />
+
+        <div className="relative text-center max-w-sm z-10 bg-[#f5f0ec]/90 rounded-2xl px-8 py-10 backdrop-blur-sm">
+          <p
+            className="text-[10px] uppercase tracking-[0.3em] mb-10 font-[family-name:var(--font-open-sans)]"
+            style={{ color: "#8b1a2a" }}
+          >
+            a gift for you
           </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+
+          <h1
+            className="text-[80px] leading-none font-[family-name:var(--font-open-sans)] font-light mb-1"
+            style={{ color: "#1a1210", fontStyle: "italic" }}
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+            Happy
+          </h1>
+          <h2
+            className="text-[80px] leading-none font-[family-name:var(--font-open-sans)] font-semibold mb-12"
+            style={{ color: "#c43040" }}
           >
-            Documentation
-          </a>
+            25th.
+          </h2>
+
+          <p
+            className="text-[18px] font-[family-name:var(--font-open-sans)] mb-1"
+            style={{ color: "#1a1210" }}
+          >
+            Dear Sharmin,
+          </p>
+          <p
+            className="text-[18px] leading-[1.85] font-[family-name:var(--font-open-sans)] mb-14"
+            style={{ color: "#2a1810" }}
+          >
+            here&apos;s something inspired by your pursuit of knowledge and
+            growth with a sprinkle of mental health — a digital archive for
+            everything that comes next.
+          </p>
+
+          <button
+            onClick={() => setOpened(true)}
+            className="w-full rounded-full py-4 text-[11px] tracking-[0.2em] uppercase font-[family-name:var(--font-open-sans)] transition-all hover:opacity-90 active:scale-[0.98]"
+            style={{ background: "#c43040", color: "#f5f0ec" }}
+          >
+            Continue
+          </button>
         </div>
-      </main>
+      </div>
+    );
+  }
+
+  return (
+    <div className="relative flex min-h-screen flex-col items-center justify-center px-8 overflow-hidden">
+      {/* Sand with leaf shadows — image 5 */}
+      <Image
+        src="/images/bc192dcdcdef754f8d040801ffb12334.jpg"
+        alt=""
+        fill
+        className="object-cover object-top"
+        priority
+      />
+      <div className="absolute inset-0 bg-[#e8d8b8]/55" />
+
+      <div className="relative text-center max-w-sm z-10">
+        <p
+          className="text-[10px] uppercase tracking-[0.3em] mb-10 font-[family-name:var(--font-open-sans)]"
+          style={{ color: "#8b1a2a" }}
+        >
+          your app
+        </p>
+
+        <h1
+          className="text-[88px] leading-none font-[family-name:var(--font-open-sans)] font-light mb-2"
+          style={{ color: "#c43040" }}
+        >
+          رمّان
+        </h1>
+        <h2
+          className="text-[30px] font-[family-name:var(--font-open-sans)] font-semibold tracking-wide mb-4"
+          style={{ color: "#1a1210" }}
+        >
+          Romman
+        </h2>
+        <p
+          className="text-[17px] font-[family-name:var(--font-open-sans)] mb-14"
+          style={{ color: "#6b4a3a", fontStyle: "italic" }}
+        >
+          digital archive
+        </p>
+
+        <div className="flex flex-col gap-3">
+          <Link
+            href="/onboarding"
+            className="rounded-full py-4 text-center text-[11px] tracking-[0.2em] uppercase font-[family-name:var(--font-open-sans)] transition-all hover:opacity-90"
+            style={{ background: "#c43040", color: "#f5f0ec" }}
+          >
+            Begin
+          </Link>
+          <Link
+            href="/signin"
+            className="rounded-full py-4 text-center text-[11px] tracking-[0.2em] uppercase font-[family-name:var(--font-open-sans)] transition-all"
+            style={{ border: "1.5px solid #8b1a2a99", color: "#8b1a2a", background: "rgba(245,240,236,0.65)" }}
+          >
+            Sign In
+          </Link>
+        </div>
+      </div>
     </div>
   );
 }
