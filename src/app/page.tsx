@@ -52,9 +52,8 @@ export default function Home() {
             className="text-[18px] leading-[1.85] font-[family-name:var(--font-open-sans)] mb-14"
             style={{ color: "#2a1810" }}
           >
-            here&apos;s something inspired by your pursuit of knowledge and
-            growth with a sprinkle of mental health — a digital archive for
-            everything that comes next.
+            like a pomegranate, full of small things worth keeping —
+            here&apos;s a new digital archive for everything that comes next.
           </p>
 
           <button
