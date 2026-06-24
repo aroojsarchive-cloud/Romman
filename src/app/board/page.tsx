@@ -133,7 +133,6 @@ export default function Board() {
 
       {pins.length === 0 && (
         <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-8 text-center">
-          <p className="text-[32px] mb-4">🍎</p>
           <p className="text-[16px]" style={{ color: "#9b8070", fontStyle: "italic", fontFamily: "Georgia, serif" }}>
             nothing pinned yet — be the first
           </p>

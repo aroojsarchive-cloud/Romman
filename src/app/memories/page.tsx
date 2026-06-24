@@ -118,7 +118,6 @@ export default function Memories() {
         {albums.length === 0 && (
           <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-8 text-center gap-4">
             <div className="w-24 h-32 rounded-lg flex items-center justify-center" style={{ background: "#e8ddd0", border: "1px dashed #c4b8a8" }}>
-              <p className="text-[32px]">📷</p>
             </div>
             <p className="text-[16px]" style={{ color: "#9b8070", fontStyle: "italic", fontFamily: "Georgia, serif" }}>
               no albums yet — start one
@@ -141,7 +140,6 @@ export default function Memories() {
                     <img src={album.cover} alt="" className="w-full h-full object-cover" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center">
-                      <p className="text-[28px]">🎞</p>
                     </div>
                   )}
                 </div>
