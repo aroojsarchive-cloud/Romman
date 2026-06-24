@@ -91,7 +91,6 @@ export default function SignIn() {
           </form>
         ) : (
           <div>
-            <p className="text-[32px] mb-4">✉️</p>
             <p className="text-[16px] leading-relaxed" style={{ color: "#6b4a3a" }}>
               Check your email — a sign-in link is waiting for you.
             </p>
