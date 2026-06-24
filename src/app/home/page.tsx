@@ -66,9 +66,9 @@ const quotes = [
 
 const sections = [
   { label: "Memories", sub: "photos & moments", href: "/memories" },
-  { label: "Words", sub: "questions & answers", href: "/words" },
-  { label: "Board", sub: "our moodboard", href: "/board" },
-  { label: "Notes", sub: "for each other", href: "/notes" },
+  { label: "Letters", sub: "questions & answers", href: "/words" },
+  { label: "Pinned", sub: "our moodboard", href: "/board" },
+  { label: "Collected", sub: "for each other", href: "/notes" },
 ];
 
 export default function ArchiveHome() {

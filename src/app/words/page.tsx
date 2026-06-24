@@ -92,7 +92,7 @@ export default function Words() {
           <Link href="/home" className="text-[20px]" style={{ color: "#9b8070" }}>←</Link>
           <div>
             <p className="text-[10px] uppercase tracking-[0.25em]" style={{ color: "#9b8070" }}>weekly</p>
-            <h1 className="text-[20px] leading-none font-semibold" style={{ color: "#1a1210" }}>Words</h1>
+            <h1 className="text-[20px] leading-none font-semibold" style={{ color: "#1a1210" }}>Letters</h1>
           </div>
         </div>
         <span className="text-[12px]" style={{ color: "#9b8070" }}>week {currentWeek} of 52</span>

@@ -84,7 +84,7 @@ export default function Notes() {
               className="text-[22px] leading-none"
               style={{ color: "#f5f0eb", fontFamily: "Georgia, serif", fontStyle: "italic", fontWeight: 400 }}
             >
-              Notes
+              Collected
             </h1>
           </div>
         </div>

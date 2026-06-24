@@ -119,7 +119,7 @@ export default function Board() {
           <Link href="/home" className="text-[20px]" style={{ color: "#9b8070" }}>←</Link>
           <div>
             <p className="text-[10px] uppercase tracking-[0.25em]" style={{ color: "#9b8070" }}>shared</p>
-            <h1 className="text-[20px] leading-none font-semibold" style={{ color: "#1a1210" }}>Board</h1>
+            <h1 className="text-[20px] leading-none font-semibold" style={{ color: "#1a1210" }}>Pinned</h1>
           </div>
         </div>
         <button
