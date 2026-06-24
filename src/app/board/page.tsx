@@ -111,9 +111,11 @@ export default function Board() {
   const right = pins.filter((_, i) => i % 2 !== 0);
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: "#f5f0eb" }}>
+    <div className="relative min-h-screen flex flex-col" style={{ background: "#f5f0eb" }}>
+      <Image src="/images/board.jpg" alt="" fill className="object-cover object-center" priority />
+      <div className="absolute inset-0" style={{ background: "rgba(245,240,235,0.88)" }} />
 
-      <header className="flex items-center justify-between px-6 pt-12 pb-4">
+      <header className="relative z-10 flex items-center justify-between px-6 pt-12 pb-4">
         <div className="flex items-center gap-3">
           <Link href="/home" className="text-[20px]" style={{ color: "#9b8070" }}>←</Link>
           <div>
@@ -131,7 +133,7 @@ export default function Board() {
       </header>
 
       {pins.length === 0 && (
-        <div className="flex-1 flex flex-col items-center justify-center px-8 text-center">
+        <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-8 text-center">
           <p className="text-[32px] mb-4">🍎</p>
           <p className="text-[16px]" style={{ color: "#9b8070", fontStyle: "italic", fontFamily: "Georgia, serif" }}>
             nothing pinned yet — be the first
@@ -140,7 +142,7 @@ export default function Board() {
       )}
 
       {pins.length > 0 && (
-        <div className="px-4 pb-24 flex gap-3">
+        <div className="relative z-10 px-4 pb-24 flex gap-3">
           <div className="flex-1 flex flex-col gap-3">
             {left.map((pin) => <PinCard key={pin.id} pin={pin} onTap={setSelected} getImageUrl={getImageUrl} byColor={byColor} />)}
           </div>
