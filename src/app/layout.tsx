@@ -10,11 +10,17 @@ const openSans = Open_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "Romman — A gift for you",
-  description: "Happy 25th.",
+  title: "Romman",
+  description: "A shared digital archive.",
   icons: {
     icon: "/icon.png",
     apple: "/icon.png",
+  },
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "Romman",
   },
 };
 
