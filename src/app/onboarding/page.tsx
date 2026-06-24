@@ -107,6 +107,7 @@ export default function Onboarding() {
 
             <Link
               href="/home"
+              onClick={() => localStorage.setItem("romman_onboarded", "1")}
               className="block w-full rounded-full py-4 text-center text-[11px] tracking-[0.2em] uppercase font-[family-name:var(--font-open-sans)] transition-all hover:opacity-90"
               style={{ background: "#c43040", color: "#f5f0ec" }}
             >

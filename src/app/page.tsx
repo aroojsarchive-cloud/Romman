@@ -109,18 +109,11 @@ export default function Home() {
 
         <div className="flex flex-col gap-3">
           <Link
-            href="/onboarding"
+            href="/signin"
             className="rounded-full py-4 text-center text-[11px] tracking-[0.2em] uppercase font-[family-name:var(--font-open-sans)] transition-all hover:opacity-90"
             style={{ background: "#c43040", color: "#f5f0ec" }}
           >
             Begin
-          </Link>
-          <Link
-            href="/signin"
-            className="rounded-full py-4 text-center text-[11px] tracking-[0.2em] uppercase font-[family-name:var(--font-open-sans)] transition-all"
-            style={{ border: "1.5px solid #8b1a2a99", color: "#8b1a2a", background: "rgba(245,240,236,0.65)" }}
-          >
-            Sign In
           </Link>
         </div>
       </div>

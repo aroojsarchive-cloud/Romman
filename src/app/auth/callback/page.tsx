@@ -10,8 +10,13 @@ export default function AuthCallback() {
   useEffect(() => {
     const code = new URLSearchParams(window.location.search).get("code");
     if (code) {
-      supabase.auth.exchangeCodeForSession(code).then(() => {
-        router.replace("/home");
+      supabase.auth.exchangeCodeForSession(code).then(async () => {
+        const seen = localStorage.getItem("romman_onboarded");
+        if (seen) {
+          router.replace("/home");
+        } else {
+          router.replace("/onboarding");
+        }
       });
     } else {
       router.replace("/home");
