@@ -1,0 +1,333 @@
+"use client";
+
+import { useState, useEffect, useRef } from "react";
+import Image from "next/image";
+import Link from "next/link";
+import { supabase } from "@/lib/supabase";
+
+type Pin = {
+  id: string;
+  type: "image" | "link" | "note";
+  storage_path: string | null;
+  url: string | null;
+  link_title: string | null;
+  caption: string | null;
+  created_at: string;
+  user_id: string;
+  profiles?: { initial: string; name: string };
+};
+
+const byColor: Record<string, string> = {
+  S: "#8b1a2a",
+  H: "#c4a06a",
+  A: "#6b4a3a",
+};
+
+export default function Board() {
+  const [pins, setPins] = useState<Pin[]>([]);
+  const [selected, setSelected] = useState<Pin | null>(null);
+  const [showAdd, setShowAdd] = useState(false);
+  const [addType, setAddType] = useState<"image" | "link" | "note" | null>(null);
+  const [caption, setCaption] = useState("");
+  const [linkUrl, setLinkUrl] = useState("");
+  const [linkTitle, setLinkTitle] = useState("");
+  const [noteText, setNoteText] = useState("");
+  const [uploading, setUploading] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
+  const [userInitial, setUserInitial] = useState("S");
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    loadPins();
+    supabase.auth.getUser().then(({ data }) => {
+      if (data.user) {
+        setUserId(data.user.id);
+        fetchProfile(data.user.id);
+      }
+    });
+  }, []);
+
+  async function fetchProfile(uid: string) {
+    const { data } = await supabase.from("profiles").select("initial").eq("id", uid).single();
+    if (data) setUserInitial(data.initial);
+  }
+
+  async function loadPins() {
+    const { data } = await supabase
+      .from("pins")
+      .select("*, profiles(initial, name)")
+      .order("created_at", { ascending: false });
+    if (data) setPins(data as Pin[]);
+  }
+
+  function getImageUrl(path: string) {
+    return supabase.storage.from("pins").getPublicUrl(path).data.publicUrl;
+  }
+
+  async function handleImageUpload(file: File) {
+    if (!userId) return;
+    setUploading(true);
+    const ext = file.name.split(".").pop();
+    const path = `${userId}/${Date.now()}.${ext}`;
+    const { error: uploadError } = await supabase.storage.from("pins").upload(path, file);
+    if (uploadError) { setUploading(false); return; }
+    await supabase.from("pins").insert({ user_id: userId, type: "image", storage_path: path, caption: caption || null });
+    setCaption("");
+    setAddType(null);
+    setShowAdd(false);
+    setUploading(false);
+    loadPins();
+  }
+
+  async function handleAddLink() {
+    if (!userId || !linkUrl) return;
+    setUploading(true);
+    await supabase.from("pins").insert({ user_id: userId, type: "link", url: linkUrl, link_title: linkTitle || linkUrl, caption: caption || null });
+    setLinkUrl(""); setLinkTitle(""); setCaption("");
+    setAddType(null); setShowAdd(false);
+    setUploading(false);
+    loadPins();
+  }
+
+  async function handleAddNote() {
+    if (!userId || !noteText) return;
+    setUploading(true);
+    await supabase.from("pins").insert({ user_id: userId, type: "note", caption: noteText });
+    setNoteText("");
+    setAddType(null); setShowAdd(false);
+    setUploading(false);
+    loadPins();
+  }
+
+  async function handleDelete(pin: Pin) {
+    if (pin.user_id !== userId) return;
+    if (pin.storage_path) await supabase.storage.from("pins").remove([pin.storage_path]);
+    await supabase.from("pins").delete().eq("id", pin.id);
+    setSelected(null);
+    loadPins();
+  }
+
+  const left = pins.filter((_, i) => i % 2 === 0);
+  const right = pins.filter((_, i) => i % 2 !== 0);
+
+  return (
+    <div className="min-h-screen flex flex-col" style={{ background: "#f5f0eb" }}>
+
+      <header className="flex items-center justify-between px-6 pt-12 pb-4">
+        <div className="flex items-center gap-3">
+          <Link href="/home" className="text-[20px]" style={{ color: "#9b8070" }}>←</Link>
+          <div>
+            <p className="text-[10px] uppercase tracking-[0.25em]" style={{ color: "#9b8070" }}>shared</p>
+            <h1 className="text-[20px] leading-none font-semibold" style={{ color: "#1a1210" }}>Board</h1>
+          </div>
+        </div>
+        <button
+          onClick={() => setShowAdd(true)}
+          className="w-9 h-9 rounded-full flex items-center justify-center text-[20px] font-light"
+          style={{ background: "#8b1a2a", color: "#f5f0eb" }}
+        >
+          +
+        </button>
+      </header>
+
+      {pins.length === 0 && (
+        <div className="flex-1 flex flex-col items-center justify-center px-8 text-center">
+          <p className="text-[32px] mb-4">🍎</p>
+          <p className="text-[16px]" style={{ color: "#9b8070", fontStyle: "italic", fontFamily: "Georgia, serif" }}>
+            nothing pinned yet — be the first
+          </p>
+        </div>
+      )}
+
+      {pins.length > 0 && (
+        <div className="px-4 pb-24 flex gap-3">
+          <div className="flex-1 flex flex-col gap-3">
+            {left.map((pin) => <PinCard key={pin.id} pin={pin} onTap={setSelected} getImageUrl={getImageUrl} byColor={byColor} />)}
+          </div>
+          <div className="flex-1 flex flex-col gap-3 mt-6">
+            {right.map((pin) => <PinCard key={pin.id} pin={pin} onTap={setSelected} getImageUrl={getImageUrl} byColor={byColor} />)}
+          </div>
+        </div>
+      )}
+
+      {/* Full screen pin view */}
+      {selected && (
+        <div className="fixed inset-0 z-50 flex flex-col" style={{ background: "rgba(26,18,16,0.95)" }} onClick={() => setSelected(null)}>
+          <button className="absolute top-12 right-6 text-[28px]" style={{ color: "#f5f0eb" }}>×</button>
+          <div className="flex-1 flex flex-col items-center justify-center px-6 gap-4" onClick={(e) => e.stopPropagation()}>
+            {selected.type === "image" && selected.storage_path && (
+              <div className="relative w-full rounded-2xl overflow-hidden" style={{ height: 340 }}>
+                <Image src={getImageUrl(selected.storage_path)} alt="" fill className="object-cover" />
+              </div>
+            )}
+            {selected.type === "note" && (
+              <div className="w-full rounded-2xl p-6" style={{ background: "#ede8e2" }}>
+                <p className="text-[18px] leading-relaxed" style={{ color: "#6b4a3a", fontStyle: "italic", fontFamily: "Georgia, serif" }}>
+                  {selected.caption}
+                </p>
+              </div>
+            )}
+            {selected.type === "link" && (
+              <div className="w-full rounded-2xl p-6" style={{ background: "#ede8e2" }}>
+                <p className="text-[11px] uppercase tracking-wide mb-2" style={{ color: "#9b8070" }}>link</p>
+                <p className="text-[18px] font-semibold mb-3" style={{ color: "#1a1210" }}>{selected.link_title}</p>
+                {selected.url && (
+                  <a href={selected.url} target="_blank" rel="noopener noreferrer" className="text-[13px] underline" style={{ color: "#8b1a2a" }}>
+                    open link →
+                  </a>
+                )}
+              </div>
+            )}
+            {selected.caption && selected.type !== "note" && (
+              <p className="text-[15px]" style={{ color: "#f5f0eb", fontStyle: "italic", fontFamily: "Georgia, serif" }}>
+                {selected.caption}
+              </p>
+            )}
+            <div className="flex items-center justify-between w-full">
+              <div className="flex items-center gap-2">
+                <div className="w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-semibold"
+                  style={{ background: byColor[selected.profiles?.initial ?? "S"] ?? "#8b1a2a", color: "#f5f0eb" }}>
+                  {selected.profiles?.initial ?? "?"}
+                </div>
+                <p className="text-[12px]" style={{ color: "rgba(245,240,235,0.6)" }}>
+                  pinned by {selected.profiles?.name ?? "someone"}
+                </p>
+              </div>
+              {selected.user_id === userId && (
+                <button onClick={() => handleDelete(selected)} className="text-[12px] uppercase tracking-wide" style={{ color: "#c43040" }}>
+                  remove
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add pin sheet */}
+      {showAdd && !addType && (
+        <div className="fixed inset-0 z-50 flex flex-col justify-end" style={{ background: "rgba(26,18,16,0.5)" }} onClick={() => setShowAdd(false)}>
+          <div className="rounded-t-3xl p-8 flex flex-col gap-4" style={{ background: "#f5f0eb" }} onClick={(e) => e.stopPropagation()}>
+            <p className="text-[10px] uppercase tracking-[0.25em] text-center mb-2" style={{ color: "#9b8070" }}>add to board</p>
+            {[
+              { label: "Photo or image", icon: "◈", type: "image" as const },
+              { label: "Link", icon: "↗", type: "link" as const },
+              { label: "Note", icon: "✦", type: "note" as const },
+            ].map((opt) => (
+              <button key={opt.label} onClick={() => { setAddType(opt.type); if (opt.type === "image") fileRef.current?.click(); }}
+                className="flex items-center gap-4 rounded-2xl px-5 py-4 text-left active:opacity-70"
+                style={{ background: "#ede8e2" }}>
+                <span className="text-[18px]" style={{ color: "#8b1a2a" }}>{opt.icon}</span>
+                <span className="text-[15px] font-semibold" style={{ color: "#1a1210" }}>{opt.label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Image caption input */}
+      {showAdd && addType === "image" && (
+        <div className="fixed inset-0 z-50 flex flex-col justify-end" style={{ background: "rgba(26,18,16,0.5)" }}>
+          <div className="rounded-t-3xl p-8 flex flex-col gap-4" style={{ background: "#f5f0eb" }}>
+            <p className="text-[10px] uppercase tracking-[0.25em] text-center mb-2" style={{ color: "#9b8070" }}>add a caption (optional)</p>
+            <input value={caption} onChange={(e) => setCaption(e.target.value)} placeholder="say something…"
+              className="w-full rounded-2xl px-5 py-3.5 text-[14px] outline-none"
+              style={{ background: "#ede8e2", color: "#1a1210", border: "1px solid #d4c8b8" }} />
+            <label className="block w-full rounded-full py-4 text-center text-[11px] tracking-[0.2em] uppercase cursor-pointer"
+              style={{ background: "#c43040", color: "#f5f0eb" }}>
+              {uploading ? "uploading…" : "choose photo"}
+              <input ref={fileRef} type="file" accept="image/*" className="hidden"
+                onChange={(e) => { if (e.target.files?.[0]) handleImageUpload(e.target.files[0]); }} />
+            </label>
+            <button onClick={() => { setAddType(null); setCaption(""); }} className="text-[12px] text-center" style={{ color: "#9b8070" }}>cancel</button>
+          </div>
+        </div>
+      )}
+
+      {/* Link input */}
+      {showAdd && addType === "link" && (
+        <div className="fixed inset-0 z-50 flex flex-col justify-end" style={{ background: "rgba(26,18,16,0.5)" }}>
+          <div className="rounded-t-3xl p-8 flex flex-col gap-4" style={{ background: "#f5f0eb" }}>
+            <p className="text-[10px] uppercase tracking-[0.25em] text-center mb-2" style={{ color: "#9b8070" }}>add a link</p>
+            <input value={linkUrl} onChange={(e) => setLinkUrl(e.target.value)} placeholder="https://…"
+              className="w-full rounded-2xl px-5 py-3.5 text-[14px] outline-none"
+              style={{ background: "#ede8e2", color: "#1a1210", border: "1px solid #d4c8b8" }} />
+            <input value={linkTitle} onChange={(e) => setLinkTitle(e.target.value)} placeholder="title (optional)"
+              className="w-full rounded-2xl px-5 py-3.5 text-[14px] outline-none"
+              style={{ background: "#ede8e2", color: "#1a1210", border: "1px solid #d4c8b8" }} />
+            <input value={caption} onChange={(e) => setCaption(e.target.value)} placeholder="caption (optional)"
+              className="w-full rounded-2xl px-5 py-3.5 text-[14px] outline-none"
+              style={{ background: "#ede8e2", color: "#1a1210", border: "1px solid #d4c8b8" }} />
+            <button onClick={handleAddLink} disabled={!linkUrl || uploading}
+              className="w-full rounded-full py-4 text-[11px] tracking-[0.2em] uppercase disabled:opacity-50"
+              style={{ background: "#c43040", color: "#f5f0eb" }}>
+              {uploading ? "saving…" : "pin link"}
+            </button>
+            <button onClick={() => { setAddType(null); setLinkUrl(""); setLinkTitle(""); setCaption(""); }}
+              className="text-[12px] text-center" style={{ color: "#9b8070" }}>cancel</button>
+          </div>
+        </div>
+      )}
+
+      {/* Note input */}
+      {showAdd && addType === "note" && (
+        <div className="fixed inset-0 z-50 flex flex-col justify-end" style={{ background: "rgba(26,18,16,0.5)" }}>
+          <div className="rounded-t-3xl p-8 flex flex-col gap-4" style={{ background: "#f5f0eb" }}>
+            <p className="text-[10px] uppercase tracking-[0.25em] text-center mb-2" style={{ color: "#9b8070" }}>leave a note</p>
+            <textarea value={noteText} onChange={(e) => setNoteText(e.target.value)} placeholder="write something…" rows={4}
+              className="w-full rounded-2xl px-5 py-3.5 text-[14px] outline-none resize-none"
+              style={{ background: "#ede8e2", color: "#1a1210", border: "1px solid #d4c8b8", fontStyle: "italic", fontFamily: "Georgia, serif" }} />
+            <button onClick={handleAddNote} disabled={!noteText || uploading}
+              className="w-full rounded-full py-4 text-[11px] tracking-[0.2em] uppercase disabled:opacity-50"
+              style={{ background: "#c43040", color: "#f5f0eb" }}>
+              {uploading ? "saving…" : "pin note"}
+            </button>
+            <button onClick={() => { setAddType(null); setNoteText(""); }}
+              className="text-[12px] text-center" style={{ color: "#9b8070" }}>cancel</button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function PinCard({ pin, onTap, getImageUrl, byColor }: {
+  pin: Pin;
+  onTap: (p: Pin) => void;
+  getImageUrl: (path: string) => string;
+  byColor: Record<string, string>;
+}) {
+  const initial = pin.profiles?.initial ?? "?";
+  return (
+    <button onClick={() => onTap(pin)} className="w-full rounded-2xl overflow-hidden text-left active:opacity-80 relative"
+      style={{ background: pin.type === "note" ? "#ede8e2" : "#d4c8b8" }}>
+      {pin.type === "image" && pin.storage_path && (
+        <div className="relative w-full" style={{ minHeight: 120 }}>
+          <img src={getImageUrl(pin.storage_path)} alt="" className="w-full object-cover rounded-2xl" />
+        </div>
+      )}
+      {pin.type === "link" && (
+        <div className="p-4">
+          <p className="text-[10px] uppercase tracking-wide mb-1" style={{ color: "#9b8070" }}>link</p>
+          <p className="text-[13px] font-semibold leading-snug" style={{ color: "#1a1210" }}>{pin.link_title || pin.url}</p>
+          {pin.caption && <p className="text-[11px] mt-1" style={{ color: "#6b4a3a" }}>{pin.caption}</p>}
+        </div>
+      )}
+      {pin.type === "note" && (
+        <div className="p-4">
+          <p className="text-[13px] leading-relaxed" style={{ color: "#6b4a3a", fontStyle: "italic", fontFamily: "Georgia, serif" }}>
+            {pin.caption}
+          </p>
+        </div>
+      )}
+      {pin.caption && pin.type === "image" && (
+        <div className="px-3 py-2">
+          <p className="text-[11px]" style={{ color: "#6b4a3a" }}>{pin.caption}</p>
+        </div>
+      )}
+      <div className="absolute top-2 right-2 w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-semibold"
+        style={{ background: byColor[initial] ?? "#8b1a2a", color: "#f5f0eb" }}>
+        {initial}
+      </div>
+    </button>
+  );
+}
