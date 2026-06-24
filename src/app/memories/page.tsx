@@ -96,8 +96,10 @@ export default function Memories() {
   // Album list view
   if (!openAlbum) {
     return (
-      <div className="min-h-screen flex flex-col pb-10" style={{ background: "#f0ebe3" }}>
-        <header className="flex items-center justify-between px-6 pt-12 pb-6">
+      <div className="relative min-h-screen flex flex-col pb-10" style={{ background: "#f0ebe3" }}>
+        <Image src="/images/16bc9db4080a24ac00779c23557671de.jpg" alt="" fill className="object-cover object-top" priority />
+        <div className="absolute inset-0" style={{ background: "rgba(240,235,227,0.82)" }} />
+        <header className="relative z-10 flex items-center justify-between px-6 pt-12 pb-6">
           <div className="flex items-center gap-3">
             <Link href="/home" className="text-[20px]" style={{ color: "#9b8070" }}>←</Link>
             <div>
@@ -115,7 +117,7 @@ export default function Memories() {
         </header>
 
         {albums.length === 0 && (
-          <div className="flex-1 flex flex-col items-center justify-center px-8 text-center gap-4">
+          <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-8 text-center gap-4">
             <div className="w-24 h-32 rounded-lg flex items-center justify-center" style={{ background: "#e8ddd0", border: "1px dashed #c4b8a8" }}>
               <p className="text-[32px]">📷</p>
             </div>
@@ -126,7 +128,7 @@ export default function Memories() {
         )}
 
         {/* Album grid — polaroid style */}
-        <div className="px-6 grid grid-cols-2 gap-6">
+        <div className="relative z-10 px-6 grid grid-cols-2 gap-6">
           {albums.map((album, i) => (
             <button
               key={album.id}
