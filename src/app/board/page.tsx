@@ -240,9 +240,7 @@ export default function Board() {
           <button className="absolute top-12 right-6 text-[28px]" style={{ color: "#f5f0eb" }}>×</button>
           <div className="flex-1 flex flex-col items-center justify-center px-6 gap-4" onClick={(e) => e.stopPropagation()}>
             {selected.type === "image" && selected.storage_path && (
-              <div className="relative w-full rounded-2xl overflow-hidden" style={{ height: 340 }}>
-                <Image src={getImageUrl(selected.storage_path)} alt="" fill className="object-cover" />
-              </div>
+              <img src={getImageUrl(selected.storage_path)} alt="" className="w-full rounded-2xl object-cover" />
             )}
             {selected.type === "note" && (
               <div className="w-full rounded-2xl p-6" style={{ background: "#ede8e2" }}>
