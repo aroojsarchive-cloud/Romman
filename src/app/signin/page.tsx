@@ -6,8 +6,8 @@ import { supabase } from "@/lib/supabase";
 
 const ALLOWED_EMAILS = [
   "aroojsarchive@gmail.com",
+  "hannahabdalla@hotmail.com",
   // add Sharmin's email
-  // add H's email
 ];
 
 export default function SignIn() {
