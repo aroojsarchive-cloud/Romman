@@ -64,7 +64,7 @@ function SortablePinCard({ pin, onTap, getImageUrl }: {
     >
       <div className="w-full rounded-2xl overflow-hidden relative" style={{ background: pin.type === "note" ? "#ede8e2" : "#d4c8b8" }}>
         {pin.type === "image" && pin.storage_path && (
-          <img src={getImageUrl(pin.storage_path)} alt="" className="w-full object-cover rounded-2xl" />
+          <img src={getImageUrl(pin.storage_path)} alt="" className="w-full rounded-2xl" style={{ display: "block" }} />
         )}
         {pin.type === "link" && (
           <div className="p-4">
