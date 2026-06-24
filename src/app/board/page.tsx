@@ -20,6 +20,7 @@ import {
   arrayMove,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { useRef } from "react";
 
 type Pin = {
   id: string;
@@ -40,27 +41,37 @@ const byColor: Record<string, string> = {
   A: "#6b4a3a",
 };
 
-function SortablePinCard({ pin, onTap, getImageUrl }: {
+function SortablePinCard({ pin, onTap, getImageUrl, onDelete, userId }: {
   pin: Pin;
   onTap: (p: Pin) => void;
   getImageUrl: (path: string) => string;
+  onDelete: (p: Pin) => void;
+  userId: string | null;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: pin.id });
   const initial = pin.profiles?.initial ?? "?";
+  const [showDelete, setShowDelete] = useState(false);
+  const holdTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  function handlePressStart() {
+    holdTimer.current = setTimeout(() => setShowDelete(true), 500);
+  }
+
+  function handlePressEnd() {
+    if (holdTimer.current) clearTimeout(holdTimer.current);
+  }
 
   return (
     <div
       ref={setNodeRef}
-      style={{
-        transform: CSS.Transform.toString(transform),
-        transition,
-        opacity: isDragging ? 0.5 : 1,
-        zIndex: isDragging ? 50 : 1,
-      }}
+      style={{ transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.5 : 1, zIndex: isDragging ? 50 : 1, position: "relative" }}
       {...attributes}
       {...listeners}
-      className="w-full rounded-2xl overflow-hidden relative cursor-grab active:cursor-grabbing"
-      onClick={() => !isDragging && onTap(pin)}
+      onMouseDown={handlePressStart}
+      onMouseUp={handlePressEnd}
+      onTouchStart={handlePressStart}
+      onTouchEnd={handlePressEnd}
+      onClick={() => { if (!isDragging && !showDelete) onTap(pin); }}
     >
       <div className="w-full rounded-2xl overflow-hidden relative" style={{ background: pin.type === "note" ? "#ede8e2" : "#d4c8b8" }}>
         {pin.type === "image" && pin.storage_path && (
@@ -89,6 +100,39 @@ function SortablePinCard({ pin, onTap, getImageUrl }: {
           style={{ background: byColor[initial] ?? "#8b1a2a", color: "#f5f0eb" }}>
           {initial}
         </div>
+
+        {/* Long-press delete overlay — only own pins */}
+        {showDelete && pin.user_id === userId && (
+          <div className="absolute inset-0 rounded-2xl flex flex-col items-center justify-center gap-3"
+            style={{ background: "rgba(26,18,16,0.75)" }}>
+            <button
+              onClick={(e) => { e.stopPropagation(); onDelete(pin); setShowDelete(false); }}
+              className="rounded-full px-5 py-2.5 text-[11px] uppercase tracking-widest"
+              style={{ background: "#c43040", color: "#f5f0eb" }}
+            >
+              remove
+            </button>
+            <button
+              onClick={(e) => { e.stopPropagation(); setShowDelete(false); }}
+              className="text-[11px] uppercase tracking-widest"
+              style={{ color: "rgba(245,240,235,0.6)" }}
+            >
+              cancel
+            </button>
+          </div>
+        )}
+        {showDelete && pin.user_id !== userId && (
+          <div className="absolute inset-0 rounded-2xl flex items-center justify-center"
+            style={{ background: "rgba(26,18,16,0.75)" }}>
+            <button
+              onClick={(e) => { e.stopPropagation(); setShowDelete(false); }}
+              className="text-[11px] uppercase tracking-widest"
+              style={{ color: "rgba(245,240,235,0.6)" }}
+            >
+              cancel
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -221,12 +265,12 @@ export default function Board() {
             <div className="relative z-10 px-4 pb-24 flex gap-3">
               <div className="flex-1 flex flex-col gap-3">
                 {left.map((pin) => (
-                  <SortablePinCard key={pin.id} pin={pin} onTap={setSelected} getImageUrl={getImageUrl} />
+                  <SortablePinCard key={pin.id} pin={pin} onTap={setSelected} getImageUrl={getImageUrl} onDelete={handleDelete} userId={userId} />
                 ))}
               </div>
               <div className="flex-1 flex flex-col gap-3 mt-6">
                 {right.map((pin) => (
-                  <SortablePinCard key={pin.id} pin={pin} onTap={setSelected} getImageUrl={getImageUrl} />
+                  <SortablePinCard key={pin.id} pin={pin} onTap={setSelected} getImageUrl={getImageUrl} onDelete={handleDelete} userId={userId} />
                 ))}
               </div>
             </div>
