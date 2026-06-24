@@ -279,21 +279,23 @@ export default function Memories() {
             <input type="date" value={takenAt} onChange={(e) => setTakenAt(e.target.value)}
               className="w-full rounded-2xl px-5 py-3.5 text-[14px] outline-none"
               style={{ background: "#ede8e2", color: "#9b8070", border: "1px solid #d4c8b8" }} />
-            <input
-              ref={photoInputRef}
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={(e) => { if (e.target.files?.[0]) handlePhotoUpload(e.target.files[0]); }}
-            />
-            <button
-              onClick={() => photoInputRef.current?.click()}
-              disabled={uploading}
-              className="w-full rounded-full py-4 text-[11px] tracking-[0.2em] uppercase disabled:opacity-50"
-              style={{ background: "#c43040", color: "#f5f0eb" }}
-            >
-              {uploading ? "uploading…" : "choose photo"}
-            </button>
+            <div className="relative w-full">
+              <button
+                disabled={uploading}
+                className="w-full rounded-full py-4 text-[11px] tracking-[0.2em] uppercase disabled:opacity-50"
+                style={{ background: "#c43040", color: "#f5f0eb" }}
+              >
+                {uploading ? "uploading…" : "choose photo"}
+              </button>
+              {!uploading && (
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                  onChange={(e) => { if (e.target.files?.[0]) handlePhotoUpload(e.target.files[0]); }}
+                />
+              )}
+            </div>
             <button onClick={() => setShowAddPhoto(false)} className="text-[12px] text-center" style={{ color: "#9b8070" }}>cancel</button>
           </div>
         </div>
