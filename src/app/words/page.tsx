@@ -86,7 +86,6 @@ export default function Words() {
   return (
     <div className="relative min-h-screen flex flex-col pb-16" style={{ background: "#f0ebe3" }}>
       <Image src="/images/d7d5d2c8b99700091d21905605676fee.jpg" alt="" fill className="object-cover object-center" priority />
-      <div className="absolute inset-0" style={{ background: "rgba(240,235,227,0.88)" }} />
 
       <header className="relative z-10 flex items-center justify-between px-6 pt-12 pb-6">
         <div className="flex items-center gap-3">

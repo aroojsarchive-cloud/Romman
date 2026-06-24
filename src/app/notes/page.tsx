@@ -73,7 +73,6 @@ export default function Notes() {
         className="object-cover object-center"
         priority
       />
-      <div className="absolute inset-0" style={{ background: "rgba(20,12,8,0.52)" }} />
 
       {/* Header */}
       <header className="relative z-10 flex items-center justify-between px-6 pt-12 pb-4">
