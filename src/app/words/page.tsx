@@ -7,7 +7,7 @@ import { supabase } from "@/lib/supabase";
 type Question = {
   id: string;
   week_number: number;
-  body: string;
+  text: string;
 };
 
 type Answer = {
@@ -110,7 +110,7 @@ export default function Words() {
               className="text-[20px] leading-[1.55] mb-6"
               style={{ color: "#f5ede0", fontFamily: "Georgia, serif", fontStyle: "italic", fontWeight: 400 }}
             >
-              {currentQ.body}
+              {currentQ.text}
             </p>
 
             {/* Who answered */}
@@ -178,7 +178,7 @@ export default function Words() {
                   className="text-[15px] leading-snug mb-3"
                   style={{ color: "#2a1810", fontFamily: "Georgia, serif", fontStyle: "italic" }}
                 >
-                  {q.body}
+                  {q.text}
                 </p>
                 <div className="flex gap-1.5">
                   {["S", "H", "A"].map((initial) => {
@@ -228,7 +228,7 @@ export default function Words() {
               className="text-[20px] leading-[1.55]"
               style={{ color: "#1a1210", fontFamily: "Georgia, serif", fontStyle: "italic", fontWeight: 400 }}
             >
-              {openQuestion.body}
+              {openQuestion.text}
             </p>
           </div>
 
@@ -292,7 +292,7 @@ export default function Words() {
               className="text-[14px] leading-snug text-center mb-1"
               style={{ color: "#6b4a3a", fontFamily: "Georgia, serif", fontStyle: "italic" }}
             >
-              "{openQuestion.body}"
+              "{openQuestion.text}"
             </p>
             <textarea
               value={draft}
