@@ -1,9 +1,25 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  TouchSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  useSortable,
+  rectSortingStrategy,
+  arrayMove,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 type Pin = {
   id: string;
@@ -14,6 +30,7 @@ type Pin = {
   caption: string | null;
   created_at: string;
   user_id: string;
+  position: number;
   profiles?: { initial: string; name: string };
 };
 
@@ -22,6 +39,60 @@ const byColor: Record<string, string> = {
   H: "#c4a06a",
   A: "#6b4a3a",
 };
+
+function SortablePinCard({ pin, onTap, getImageUrl }: {
+  pin: Pin;
+  onTap: (p: Pin) => void;
+  getImageUrl: (path: string) => string;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: pin.id });
+  const initial = pin.profiles?.initial ?? "?";
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={{
+        transform: CSS.Transform.toString(transform),
+        transition,
+        opacity: isDragging ? 0.5 : 1,
+        zIndex: isDragging ? 50 : 1,
+      }}
+      {...attributes}
+      {...listeners}
+      className="w-full rounded-2xl overflow-hidden relative cursor-grab active:cursor-grabbing"
+      onClick={() => !isDragging && onTap(pin)}
+    >
+      <div className="w-full rounded-2xl overflow-hidden relative" style={{ background: pin.type === "note" ? "#ede8e2" : "#d4c8b8" }}>
+        {pin.type === "image" && pin.storage_path && (
+          <img src={getImageUrl(pin.storage_path)} alt="" className="w-full object-cover rounded-2xl" />
+        )}
+        {pin.type === "link" && (
+          <div className="p-4">
+            <p className="text-[10px] uppercase tracking-wide mb-1" style={{ color: "#9b8070" }}>link</p>
+            <p className="text-[13px] font-semibold leading-snug" style={{ color: "#1a1210" }}>{pin.link_title || pin.url}</p>
+            {pin.caption && <p className="text-[11px] mt-1" style={{ color: "#6b4a3a" }}>{pin.caption}</p>}
+          </div>
+        )}
+        {pin.type === "note" && (
+          <div className="p-4">
+            <p className="text-[13px] leading-relaxed" style={{ color: "#6b4a3a", fontStyle: "italic", fontFamily: "Georgia, serif" }}>
+              {pin.caption}
+            </p>
+          </div>
+        )}
+        {pin.caption && pin.type === "image" && (
+          <div className="px-3 py-2">
+            <p className="text-[11px]" style={{ color: "#6b4a3a" }}>{pin.caption}</p>
+          </div>
+        )}
+        <div className="absolute top-2 right-2 w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-semibold"
+          style={{ background: byColor[initial] ?? "#8b1a2a", color: "#f5f0eb" }}>
+          {initial}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function Board() {
   const [pins, setPins] = useState<Pin[]>([]);
@@ -34,34 +105,43 @@ export default function Board() {
   const [noteText, setNoteText] = useState("");
   const [uploading, setUploading] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
-  const [userInitial, setUserInitial] = useState("S");
-  const fileRef = useRef<HTMLInputElement>(null);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 5 } })
+  );
 
   useEffect(() => {
     loadPins();
     supabase.auth.getUser().then(({ data }) => {
-      if (data.user) {
-        setUserId(data.user.id);
-        fetchProfile(data.user.id);
-      }
+      if (data.user) setUserId(data.user.id);
     });
   }, []);
-
-  async function fetchProfile(uid: string) {
-    const { data } = await supabase.from("profiles").select("initial").eq("id", uid).single();
-    if (data) setUserInitial(data.initial);
-  }
 
   async function loadPins() {
     const { data } = await supabase
       .from("pins")
       .select("*, profiles(initial, name)")
-      .order("created_at", { ascending: false });
+      .order("position", { ascending: true });
     if (data) setPins(data as Pin[]);
   }
 
   function getImageUrl(path: string) {
     return supabase.storage.from("pins").getPublicUrl(path).data.publicUrl;
+  }
+
+  async function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const oldIndex = pins.findIndex((p) => p.id === active.id);
+    const newIndex = pins.findIndex((p) => p.id === over.id);
+    const reordered = arrayMove(pins, oldIndex, newIndex);
+    setPins(reordered);
+    await Promise.all(
+      reordered.map((pin, i) =>
+        supabase.from("pins").update({ position: i }).eq("id", pin.id)
+      )
+    );
   }
 
   async function handleImageUpload(file: File) {
@@ -71,12 +151,9 @@ export default function Board() {
     const path = `${userId}/${Date.now()}.${ext}`;
     const { error: uploadError } = await supabase.storage.from("pins").upload(path, file);
     if (uploadError) { alert("Upload error: " + uploadError.message); setUploading(false); return; }
-    const { error: insertError } = await supabase.from("pins").insert({ user_id: userId, type: "image", storage_path: path, caption: caption || null });
+    const { error: insertError } = await supabase.from("pins").insert({ user_id: userId, type: "image", storage_path: path, caption: caption || null, position: pins.length });
     if (insertError) { alert("Save error: " + insertError.message); setUploading(false); return; }
-    setCaption("");
-    setAddType(null);
-    setShowAdd(false);
-    setUploading(false);
+    setCaption(""); setAddType(null); setShowAdd(false); setUploading(false);
     loadPins();
   }
 
@@ -84,10 +161,8 @@ export default function Board() {
     if (!linkUrl) return;
     if (!userId) { alert("Please sign in to add to the board."); return; }
     setUploading(true);
-    await supabase.from("pins").insert({ user_id: userId, type: "link", url: linkUrl, link_title: linkTitle || linkUrl, caption: caption || null });
-    setLinkUrl(""); setLinkTitle(""); setCaption("");
-    setAddType(null); setShowAdd(false);
-    setUploading(false);
+    await supabase.from("pins").insert({ user_id: userId, type: "link", url: linkUrl, link_title: linkTitle || linkUrl, caption: caption || null, position: pins.length });
+    setLinkUrl(""); setLinkTitle(""); setCaption(""); setAddType(null); setShowAdd(false); setUploading(false);
     loadPins();
   }
 
@@ -95,10 +170,8 @@ export default function Board() {
     if (!noteText) return;
     if (!userId) { alert("Please sign in to add to the board."); return; }
     setUploading(true);
-    await supabase.from("pins").insert({ user_id: userId, type: "note", caption: noteText });
-    setNoteText("");
-    setAddType(null); setShowAdd(false);
-    setUploading(false);
+    await supabase.from("pins").insert({ user_id: userId, type: "note", caption: noteText, position: pins.length });
+    setNoteText(""); setAddType(null); setShowAdd(false); setUploading(false);
     loadPins();
   }
 
@@ -143,14 +216,22 @@ export default function Board() {
       )}
 
       {pins.length > 0 && (
-        <div className="relative z-10 px-4 pb-24 flex gap-3">
-          <div className="flex-1 flex flex-col gap-3">
-            {left.map((pin) => <PinCard key={pin.id} pin={pin} onTap={setSelected} getImageUrl={getImageUrl} byColor={byColor} />)}
-          </div>
-          <div className="flex-1 flex flex-col gap-3 mt-6">
-            {right.map((pin) => <PinCard key={pin.id} pin={pin} onTap={setSelected} getImageUrl={getImageUrl} byColor={byColor} />)}
-          </div>
-        </div>
+        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+          <SortableContext items={pins.map((p) => p.id)} strategy={rectSortingStrategy}>
+            <div className="relative z-10 px-4 pb-24 flex gap-3">
+              <div className="flex-1 flex flex-col gap-3">
+                {left.map((pin) => (
+                  <SortablePinCard key={pin.id} pin={pin} onTap={setSelected} getImageUrl={getImageUrl} />
+                ))}
+              </div>
+              <div className="flex-1 flex flex-col gap-3 mt-6">
+                {right.map((pin) => (
+                  <SortablePinCard key={pin.id} pin={pin} onTap={setSelected} getImageUrl={getImageUrl} />
+                ))}
+              </div>
+            </div>
+          </SortableContext>
+        </DndContext>
       )}
 
       {/* Full screen pin view */}
@@ -216,7 +297,7 @@ export default function Board() {
               { label: "Link", icon: "↗", type: "link" as const },
               { label: "Note", icon: "✦", type: "note" as const },
             ].map((opt) => (
-              <button key={opt.label} onClick={() => { setAddType(opt.type); if (opt.type === "image") fileRef.current?.click(); }}
+              <button key={opt.label} onClick={() => setAddType(opt.type)}
                 className="flex items-center gap-4 rounded-2xl px-5 py-4 text-left active:opacity-70"
                 style={{ background: "#ede8e2" }}>
                 <span className="text-[18px]" style={{ color: "#8b1a2a" }}>{opt.icon}</span>
@@ -227,7 +308,6 @@ export default function Board() {
         </div>
       )}
 
-      {/* Image caption input */}
       {showAdd && addType === "image" && (
         <div className="fixed inset-0 z-50 flex flex-col justify-end" style={{ background: "rgba(26,18,16,0.5)" }}>
           <div className="rounded-t-3xl p-8 flex flex-col gap-4" style={{ background: "#f5f0eb" }}>
@@ -236,20 +316,15 @@ export default function Board() {
               className="w-full rounded-2xl px-5 py-3.5 text-[14px] outline-none"
               style={{ background: "#ede8e2", color: "#1a1210", border: "1px solid #d4c8b8" }} />
             <div className="relative w-full">
-              <button
-                disabled={uploading}
+              <button disabled={uploading}
                 className="w-full rounded-full py-4 text-[11px] tracking-[0.2em] uppercase disabled:opacity-50"
-                style={{ background: "#c43040", color: "#f5f0eb" }}
-              >
+                style={{ background: "#c43040", color: "#f5f0eb" }}>
                 {uploading ? "uploading…" : "choose photo"}
               </button>
               {!uploading && (
-                <input
-                  type="file"
-                  accept="image/*"
+                <input type="file" accept="image/*"
                   className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                  onChange={(e) => { if (e.target.files?.[0]) handleImageUpload(e.target.files[0]); }}
-                />
+                  onChange={(e) => { if (e.target.files?.[0]) handleImageUpload(e.target.files[0]); }} />
               )}
             </div>
             <button onClick={() => { setAddType(null); setCaption(""); }} className="text-[12px] text-center" style={{ color: "#9b8070" }}>cancel</button>
@@ -257,7 +332,6 @@ export default function Board() {
         </div>
       )}
 
-      {/* Link input */}
       {showAdd && addType === "link" && (
         <div className="fixed inset-0 z-50 flex flex-col justify-end" style={{ background: "rgba(26,18,16,0.5)" }}>
           <div className="rounded-t-3xl p-8 flex flex-col gap-4" style={{ background: "#f5f0eb" }}>
@@ -282,7 +356,6 @@ export default function Board() {
         </div>
       )}
 
-      {/* Note input */}
       {showAdd && addType === "note" && (
         <div className="fixed inset-0 z-50 flex flex-col justify-end" style={{ background: "rgba(26,18,16,0.5)" }}>
           <div className="rounded-t-3xl p-8 flex flex-col gap-4" style={{ background: "#f5f0eb" }}>
@@ -301,47 +374,5 @@ export default function Board() {
         </div>
       )}
     </div>
-  );
-}
-
-function PinCard({ pin, onTap, getImageUrl, byColor }: {
-  pin: Pin;
-  onTap: (p: Pin) => void;
-  getImageUrl: (path: string) => string;
-  byColor: Record<string, string>;
-}) {
-  const initial = pin.profiles?.initial ?? "?";
-  return (
-    <button onClick={() => onTap(pin)} className="w-full rounded-2xl overflow-hidden text-left active:opacity-80 relative"
-      style={{ background: pin.type === "note" ? "#ede8e2" : "#d4c8b8" }}>
-      {pin.type === "image" && pin.storage_path && (
-        <div className="relative w-full" style={{ minHeight: 120 }}>
-          <img src={getImageUrl(pin.storage_path)} alt="" className="w-full object-cover rounded-2xl" />
-        </div>
-      )}
-      {pin.type === "link" && (
-        <div className="p-4">
-          <p className="text-[10px] uppercase tracking-wide mb-1" style={{ color: "#9b8070" }}>link</p>
-          <p className="text-[13px] font-semibold leading-snug" style={{ color: "#1a1210" }}>{pin.link_title || pin.url}</p>
-          {pin.caption && <p className="text-[11px] mt-1" style={{ color: "#6b4a3a" }}>{pin.caption}</p>}
-        </div>
-      )}
-      {pin.type === "note" && (
-        <div className="p-4">
-          <p className="text-[13px] leading-relaxed" style={{ color: "#6b4a3a", fontStyle: "italic", fontFamily: "Georgia, serif" }}>
-            {pin.caption}
-          </p>
-        </div>
-      )}
-      {pin.caption && pin.type === "image" && (
-        <div className="px-3 py-2">
-          <p className="text-[11px]" style={{ color: "#6b4a3a" }}>{pin.caption}</p>
-        </div>
-      )}
-      <div className="absolute top-2 right-2 w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-semibold"
-        style={{ background: byColor[initial] ?? "#8b1a2a", color: "#f5f0eb" }}>
-        {initial}
-      </div>
-    </button>
   );
 }

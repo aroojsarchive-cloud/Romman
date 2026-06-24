@@ -1,9 +1,25 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  TouchSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  useSortable,
+  rectSortingStrategy,
+  arrayMove,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 type Album = {
   id: string;
@@ -11,7 +27,50 @@ type Album = {
   description: string | null;
   created_at: string;
   cover?: string;
+  position: number;
 };
+
+function SortableAlbum({ album, index, onTap, loadMemories }: {
+  album: Album;
+  index: number;
+  onTap: (a: Album) => void;
+  loadMemories: (id: string) => void;
+}) {
+  const rotations = [-2, 1.5, -1, 2.5, -1.5, 1, -2.5, 2];
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: album.id });
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={{
+        transform: CSS.Transform.toString(transform),
+        transition,
+        opacity: isDragging ? 0.5 : 1,
+        rotate: `${rotations[index % rotations.length]}deg`,
+      }}
+      {...attributes}
+      {...listeners}
+      className="flex flex-col cursor-grab active:cursor-grabbing"
+      onClick={() => !isDragging && (onTap(album), loadMemories(album.id))}
+    >
+      <div className="w-full rounded-sm p-2 pb-8 shadow-sm flex flex-col" style={{ background: "#faf7f2", border: "1px solid #e8ddd0" }}>
+        <div className="w-full aspect-square rounded-sm overflow-hidden mb-1" style={{ background: "#e8ddd0" }}>
+          {album.cover ? (
+            <img src={album.cover} alt="" className="w-full h-full object-cover" />
+          ) : (
+            <div className="w-full h-full" />
+          )}
+        </div>
+      </div>
+      <p className="text-[12px] font-semibold mt-2 text-center" style={{ color: "#1a1210", fontFamily: "Georgia, serif", fontStyle: "italic" }}>
+        {album.name}
+      </p>
+      {album.description && (
+        <p className="text-[10px] text-center" style={{ color: "#9b8070" }}>{album.description}</p>
+      )}
+    </div>
+  );
+}
 
 type Memory = {
   id: string;
@@ -39,7 +98,25 @@ export default function Memories() {
   const [uploading, setUploading] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
   const [selected, setSelected] = useState<Memory | null>(null);
-  const photoInputRef = useRef<HTMLInputElement>(null);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 5 } })
+  );
+
+  async function handleAlbumDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const oldIndex = albums.findIndex((a) => a.id === active.id);
+    const newIndex = albums.findIndex((a) => a.id === over.id);
+    const reordered = arrayMove(albums, oldIndex, newIndex);
+    setAlbums(reordered);
+    await Promise.all(
+      reordered.map((album, i) =>
+        supabase.from("albums").update({ position: i }).eq("id", album.id)
+      )
+    );
+  }
 
   useEffect(() => {
     loadAlbums();
@@ -49,7 +126,7 @@ export default function Memories() {
   }, []);
 
   async function loadAlbums() {
-    const { data } = await supabase.from("albums").select("*").order("created_at", { ascending: false });
+    const { data } = await supabase.from("albums").select("*").order("position", { ascending: true });
     if (data) setAlbums(data);
   }
 
@@ -131,34 +208,22 @@ export default function Memories() {
           </div>
         )}
 
-        {/* Album grid — polaroid style */}
-        <div className="relative z-10 px-6 grid grid-cols-2 gap-6">
-          {albums.map((album, i) => (
-            <button
-              key={album.id}
-              onClick={() => { setOpenAlbum(album); loadMemories(album.id); }}
-              className="flex flex-col active:opacity-80"
-              style={{ transform: `rotate(${rotations[i % rotations.length]}deg)` }}
-            >
-              <div className="w-full rounded-sm p-2 pb-8 shadow-sm flex flex-col" style={{ background: "#faf7f2", border: "1px solid #e8ddd0" }}>
-                <div className="w-full aspect-square rounded-sm overflow-hidden mb-1" style={{ background: "#e8ddd0" }}>
-                  {album.cover ? (
-                    <img src={album.cover} alt="" className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center">
-                    </div>
-                  )}
-                </div>
-              </div>
-              <p className="text-[12px] font-semibold mt-2 text-center" style={{ color: "#1a1210", fontFamily: "Georgia, serif", fontStyle: "italic" }}>
-                {album.name}
-              </p>
-              {album.description && (
-                <p className="text-[10px] text-center" style={{ color: "#9b8070" }}>{album.description}</p>
-              )}
-            </button>
-          ))}
-        </div>
+        {/* Album grid — sortable polaroid style */}
+        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleAlbumDragEnd}>
+          <SortableContext items={albums.map((a) => a.id)} strategy={rectSortingStrategy}>
+            <div className="relative z-10 px-6 grid grid-cols-2 gap-6">
+              {albums.map((album, i) => (
+                <SortableAlbum
+                  key={album.id}
+                  album={album}
+                  index={i}
+                  onTap={setOpenAlbum}
+                  loadMemories={loadMemories}
+                />
+              ))}
+            </div>
+          </SortableContext>
+        </DndContext>
 
         {/* New album sheet */}
         {showNewAlbum && (
