@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { supabase } from "@/lib/supabase";
 
 type Question = {
@@ -83,9 +84,11 @@ export default function Words() {
   const pastQuestions = questions.filter((q) => q.week_number < currentWeek).reverse();
 
   return (
-    <div className="min-h-screen flex flex-col pb-16" style={{ background: "#f0ebe3" }}>
+    <div className="relative min-h-screen flex flex-col pb-16" style={{ background: "#f0ebe3" }}>
+      <Image src="/images/d7d5d2c8b99700091d21905605676fee.jpg" alt="" fill className="object-cover object-center" priority />
+      <div className="absolute inset-0" style={{ background: "rgba(240,235,227,0.88)" }} />
 
-      <header className="flex items-center justify-between px-6 pt-12 pb-6">
+      <header className="relative z-10 flex items-center justify-between px-6 pt-12 pb-6">
         <div className="flex items-center gap-3">
           <Link href="/home" className="text-[20px]" style={{ color: "#9b8070" }}>←</Link>
           <div>
@@ -98,7 +101,7 @@ export default function Words() {
 
       {/* This week's question */}
       {currentQ && (
-        <div className="px-5 mb-6">
+        <div className="relative z-10 px-5 mb-6">
           <div
             className="rounded-3xl p-6"
             style={{ background: "#8b1a2a" }}
@@ -160,7 +163,7 @@ export default function Words() {
 
       {/* Past questions */}
       {pastQuestions.length > 0 && (
-        <div className="px-5 flex flex-col gap-3">
+        <div className="relative z-10 px-5 flex flex-col gap-3">
           <p className="text-[10px] uppercase tracking-[0.25em] mb-1" style={{ color: "#9b8070" }}>past weeks</p>
           {pastQuestions.map((q) => {
             const qAnswers = answersFor(q.id);
@@ -204,7 +207,7 @@ export default function Words() {
       )}
 
       {questions.length === 0 && (
-        <div className="flex-1 flex items-center justify-center px-8 text-center">
+        <div className="relative z-10 flex-1 flex items-center justify-center px-8 text-center">
           <p className="text-[16px]" style={{ color: "#9b8070", fontFamily: "Georgia, serif", fontStyle: "italic" }}>
             questions are on their way
           </p>
