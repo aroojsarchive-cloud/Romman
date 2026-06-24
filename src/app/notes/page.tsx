@@ -42,7 +42,8 @@ export default function Notes() {
   }
 
   async function handleSave() {
-    if (!userId || !body.trim()) return;
+    if (!body.trim()) return;
+    if (!userId) { alert("Please sign in to leave a note."); return; }
     setSaving(true);
     await supabase.from("notes").insert({ user_id: userId, body: body.trim() });
     setBody("");

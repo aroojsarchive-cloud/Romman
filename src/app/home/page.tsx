@@ -73,8 +73,8 @@ const sections = [
 
 export default function ArchiveHome() {
   const answeredCount = friends.filter((f) => f.answered).length;
-  const week = Math.floor((Date.now() - new Date("2026-06-30").getTime()) / 604800000) + 1;
-  const quote = quotes[Math.max(0, week - 1) % quotes.length];
+  const week = Math.max(1, Math.floor((Date.now() - new Date("2026-06-30").getTime()) / 604800000) + 1);
+  const quote = quotes[(week - 1) % quotes.length];
 
   return (
     <div className="relative min-h-screen flex flex-col" style={{ background: "#1a1210" }}>

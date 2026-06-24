@@ -51,10 +51,10 @@ export default function Words() {
     if (qRes.data) setQuestions(qRes.data);
     if (aRes.data) setAnswers(aRes.data as Answer[]);
     // current week = highest week that has at least one answer, or 1
-    if (aRes.data && aRes.data.length > 0 && qRes.data) {
-      const answeredQuestionIds = new Set(aRes.data.map((a) => a.question_id));
-      const answeredWeeks = qRes.data.filter((q) => answeredQuestionIds.has(q.id)).map((q) => q.week_number);
-      setCurrentWeek(answeredWeeks.length > 0 ? Math.max(...answeredWeeks) : 1);
+    if (qRes.data) {
+      const weeksSinceStart = Math.max(1, Math.floor((Date.now() - new Date("2026-06-30").getTime()) / 604800000) + 1);
+      const current = Math.min(weeksSinceStart, qRes.data.length);
+      setCurrentWeek(current);
     }
   }
 

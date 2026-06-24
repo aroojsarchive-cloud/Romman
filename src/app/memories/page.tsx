@@ -80,6 +80,7 @@ export default function Memories() {
     const path = `${openAlbum.id}/${Date.now()}.${ext}`;
     const { error } = await supabase.storage.from("memories").upload(path, file);
     if (!error) {
+      const publicUrl = supabase.storage.from("memories").getPublicUrl(path).data.publicUrl;
       await supabase.from("memories").insert({
         album_id: openAlbum.id,
         user_id: userId,
@@ -87,8 +88,14 @@ export default function Memories() {
         caption: caption || null,
         taken_at: takenAt || null,
       });
+      // set album cover if not already set
+      if (!openAlbum.cover) {
+        await supabase.from("albums").update({ cover: publicUrl }).eq("id", openAlbum.id);
+        setOpenAlbum({ ...openAlbum, cover: publicUrl });
+      }
       setCaption(""); setTakenAt(""); setShowAddPhoto(false);
       loadMemories(openAlbum.id);
+      loadAlbums();
     }
     setUploading(false);
   }

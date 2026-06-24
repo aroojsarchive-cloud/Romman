@@ -65,7 +65,7 @@ export default function Board() {
   }
 
   async function handleImageUpload(file: File) {
-    if (!userId) return;
+    if (!userId) { alert("Please sign in to add to the board."); return; }
     setUploading(true);
     const ext = file.name.split(".").pop();
     const path = `${userId}/${Date.now()}.${ext}`;
@@ -80,7 +80,8 @@ export default function Board() {
   }
 
   async function handleAddLink() {
-    if (!userId || !linkUrl) return;
+    if (!linkUrl) return;
+    if (!userId) { alert("Please sign in to add to the board."); return; }
     setUploading(true);
     await supabase.from("pins").insert({ user_id: userId, type: "link", url: linkUrl, link_title: linkTitle || linkUrl, caption: caption || null });
     setLinkUrl(""); setLinkTitle(""); setCaption("");
@@ -90,7 +91,8 @@ export default function Board() {
   }
 
   async function handleAddNote() {
-    if (!userId || !noteText) return;
+    if (!noteText) return;
+    if (!userId) { alert("Please sign in to add to the board."); return; }
     setUploading(true);
     await supabase.from("pins").insert({ user_id: userId, type: "note", caption: noteText });
     setNoteText("");

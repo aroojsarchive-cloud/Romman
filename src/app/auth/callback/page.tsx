@@ -12,11 +12,9 @@ export default function AuthCallback() {
     if (code) {
       supabase.auth.exchangeCodeForSession(code).then(async () => {
         const seen = localStorage.getItem("romman_onboarded");
-        if (seen) {
-          router.replace("/home");
-        } else {
-          router.replace("/onboarding");
-        }
+        router.replace(seen ? "/home" : "/onboarding");
+      }).catch(() => {
+        router.replace("/signin");
       });
     } else {
       router.replace("/home");
