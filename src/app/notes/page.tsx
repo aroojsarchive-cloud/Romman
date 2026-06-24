@@ -67,7 +67,7 @@ export default function Notes() {
     <div className="relative min-h-screen flex flex-col">
       {/* Background */}
       <Image
-        src="/images/notes-bg.jpg"
+        src="/images/b3ef917ae5a12172dea37ffc715ab1fd.jpg"
         alt=""
         fill
         className="object-cover object-center"
