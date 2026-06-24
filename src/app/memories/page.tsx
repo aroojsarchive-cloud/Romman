@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
@@ -39,6 +39,7 @@ export default function Memories() {
   const [uploading, setUploading] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
   const [selected, setSelected] = useState<Memory | null>(null);
+  const photoInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     loadAlbums();
@@ -278,12 +279,21 @@ export default function Memories() {
             <input type="date" value={takenAt} onChange={(e) => setTakenAt(e.target.value)}
               className="w-full rounded-2xl px-5 py-3.5 text-[14px] outline-none"
               style={{ background: "#ede8e2", color: "#9b8070", border: "1px solid #d4c8b8" }} />
-            <label className="block w-full rounded-full py-4 text-center text-[11px] tracking-[0.2em] uppercase cursor-pointer"
-              style={{ background: "#c43040", color: "#f5f0eb" }}>
+            <input
+              ref={photoInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={(e) => { if (e.target.files?.[0]) handlePhotoUpload(e.target.files[0]); }}
+            />
+            <button
+              onClick={() => photoInputRef.current?.click()}
+              disabled={uploading}
+              className="w-full rounded-full py-4 text-[11px] tracking-[0.2em] uppercase disabled:opacity-50"
+              style={{ background: "#c43040", color: "#f5f0eb" }}
+            >
               {uploading ? "uploading…" : "choose photo"}
-              <input type="file" accept="image/*" className="hidden"
-                onChange={(e) => { if (e.target.files?.[0]) handlePhotoUpload(e.target.files[0]); }} />
-            </label>
+            </button>
             <button onClick={() => setShowAddPhoto(false)} className="text-[12px] text-center" style={{ color: "#9b8070" }}>cancel</button>
           </div>
         </div>

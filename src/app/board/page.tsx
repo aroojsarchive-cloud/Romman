@@ -232,12 +232,16 @@ export default function Board() {
             <input value={caption} onChange={(e) => setCaption(e.target.value)} placeholder="say something…"
               className="w-full rounded-2xl px-5 py-3.5 text-[14px] outline-none"
               style={{ background: "#ede8e2", color: "#1a1210", border: "1px solid #d4c8b8" }} />
-            <label className="block w-full rounded-full py-4 text-center text-[11px] tracking-[0.2em] uppercase cursor-pointer"
-              style={{ background: "#c43040", color: "#f5f0eb" }}>
+            <input ref={fileRef} type="file" accept="image/*" className="hidden"
+              onChange={(e) => { if (e.target.files?.[0]) handleImageUpload(e.target.files[0]); }} />
+            <button
+              onClick={() => fileRef.current?.click()}
+              disabled={uploading}
+              className="w-full rounded-full py-4 text-[11px] tracking-[0.2em] uppercase disabled:opacity-50"
+              style={{ background: "#c43040", color: "#f5f0eb" }}
+            >
               {uploading ? "uploading…" : "choose photo"}
-              <input ref={fileRef} type="file" accept="image/*" className="hidden"
-                onChange={(e) => { if (e.target.files?.[0]) handleImageUpload(e.target.files[0]); }} />
-            </label>
+            </button>
             <button onClick={() => { setAddType(null); setCaption(""); }} className="text-[12px] text-center" style={{ color: "#9b8070" }}>cancel</button>
           </div>
         </div>
