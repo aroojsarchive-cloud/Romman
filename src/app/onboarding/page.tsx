@@ -6,6 +6,12 @@ import Link from "next/link";
 
 export default function Onboarding() {
   const [collected, setCollected] = useState(false);
+  const [tapping, setTapping] = useState(false);
+
+  function handleTap() {
+    setTapping(true);
+    setTimeout(() => { setCollected(true); setTapping(false); }, 180);
+  }
 
   return (
     <div className="relative flex min-h-screen flex-col items-center justify-center px-8 overflow-hidden">
@@ -31,9 +37,13 @@ export default function Onboarding() {
 
             {/* Whole pomegranate — tap to open */}
             <button
-              onClick={() => setCollected(true)}
-              className="mx-auto mb-8 block transition-transform hover:scale-105 active:scale-95"
+              onClick={handleTap}
+              className="mx-auto mb-8 block"
               aria-label="Collect your pomegranate"
+              style={{
+                transform: tapping ? "scale(0.88)" : "scale(1)",
+                transition: "transform 0.15s ease",
+              }}
             >
               <div className="relative w-[320px] h-[320px]">
                 <Image
