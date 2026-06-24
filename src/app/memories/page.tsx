@@ -97,7 +97,7 @@ export default function Memories() {
   if (!openAlbum) {
     return (
       <div className="relative min-h-screen flex flex-col pb-10" style={{ background: "#f0ebe3" }}>
-        <Image src="/images/16bc9db4080a24ac00779c23557671de.jpg" alt="" fill className="object-cover object-top" priority />
+        <Image src="/images/063dba5544b77dec533ae34e9b598236.jpg" alt="" fill className="object-cover object-top" priority />
         <div className="absolute inset-0" style={{ background: "rgba(240,235,227,0.82)" }} />
         <header className="relative z-10 flex items-center justify-between px-6 pt-12 pb-6">
           <div className="flex items-center gap-3">
