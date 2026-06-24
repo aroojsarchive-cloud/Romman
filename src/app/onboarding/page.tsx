@@ -47,8 +47,8 @@ export default function Onboarding() {
             </button>
 
             <h2
-              className="text-[32px] font-[family-name:var(--font-open-sans)] font-semibold mb-3"
-              style={{ color: "#1a1210" }}
+              className="text-[22px] mb-3"
+              style={{ color: "#1a1210", fontFamily: "Georgia, serif", fontStyle: "italic", fontWeight: 400 }}
             >
               Tap to collect
             </h2>
@@ -56,14 +56,14 @@ export default function Onboarding() {
               className="text-[16px] leading-relaxed font-[family-name:var(--font-open-sans)] mb-2"
               style={{ color: "#6b4a3a" }}
             >
-              Every time you show up for yourself — reading, reflecting,
-              reaching out — you earn a pomegranate.
+              an archive to collect old memories, store new ones, and
+              capture pomegranates along the way.
             </p>
             <p
               className="text-[15px] font-[family-name:var(--font-open-sans)]"
               style={{ color: "#9b8070", fontStyle: "italic" }}
             >
-              This one is just for arriving.
+              this one is just for arriving.
             </p>
           </>
         ) : (
@@ -93,8 +93,8 @@ export default function Onboarding() {
             </div>
 
             <h2
-              className="text-[36px] font-[family-name:var(--font-open-sans)] font-semibold mb-3"
-              style={{ color: "#1a1210" }}
+              className="text-[20px] mb-3"
+              style={{ color: "#1a1210", fontFamily: "Georgia, serif", fontStyle: "italic", fontWeight: 400 }}
             >
               1 pomegranate
             </h2>

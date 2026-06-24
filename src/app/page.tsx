@@ -52,8 +52,9 @@ export default function Home() {
             className="text-[18px] leading-[1.85] font-[family-name:var(--font-open-sans)] mb-14"
             style={{ color: "#2a1810" }}
           >
-            like a pomegranate, full of small things worth keeping —
-            here&apos;s a new digital archive for everything that comes next.
+            here&apos;s something inspired by your pursuit of knowledge and
+            self development — a digital archive for everything that has been
+            and is yet to come, inshaaAllah.
           </p>
 
           <button
@@ -70,15 +71,14 @@ export default function Home() {
 
   return (
     <div className="relative flex min-h-screen flex-col items-center justify-center px-8 overflow-hidden">
-      {/* Sand with leaf shadows — image 5 */}
       <Image
-        src="/images/bc192dcdcdef754f8d040801ffb12334.jpg"
+        src="/images/50986ae64c1d68d87e73c1a11e58150f.jpg"
         alt=""
         fill
-        className="object-cover object-top"
+        className="object-cover object-center"
         priority
       />
-      <div className="absolute inset-0 bg-[#e8d8b8]/55" />
+      <div className="absolute inset-0 bg-[#f5f0ec]/45" />
 
       <div className="relative text-center max-w-sm z-10">
         <p
@@ -101,8 +101,8 @@ export default function Home() {
           Romman
         </h2>
         <p
-          className="text-[17px] font-[family-name:var(--font-open-sans)] mb-14"
-          style={{ color: "#6b4a3a", fontStyle: "italic" }}
+          className="text-[13px] uppercase tracking-[0.2em] font-[family-name:var(--font-open-sans)] mb-14"
+          style={{ color: "#1a1210" }}
         >
           digital archive
         </p>
