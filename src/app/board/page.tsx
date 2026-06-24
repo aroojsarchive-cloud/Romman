@@ -70,8 +70,9 @@ export default function Board() {
     const ext = file.name.split(".").pop();
     const path = `${userId}/${Date.now()}.${ext}`;
     const { error: uploadError } = await supabase.storage.from("pins").upload(path, file);
-    if (uploadError) { setUploading(false); return; }
-    await supabase.from("pins").insert({ user_id: userId, type: "image", storage_path: path, caption: caption || null });
+    if (uploadError) { alert("Upload error: " + uploadError.message); setUploading(false); return; }
+    const { error: insertError } = await supabase.from("pins").insert({ user_id: userId, type: "image", storage_path: path, caption: caption || null });
+    if (insertError) { alert("Save error: " + insertError.message); setUploading(false); return; }
     setCaption("");
     setAddType(null);
     setShowAdd(false);

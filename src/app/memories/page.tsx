@@ -79,6 +79,7 @@ export default function Memories() {
     const ext = file.name.split(".").pop();
     const path = `${openAlbum.id}/${Date.now()}.${ext}`;
     const { error } = await supabase.storage.from("memories").upload(path, file);
+    if (error) { alert("Upload error: " + error.message); setUploading(false); return; }
     if (!error) {
       const publicUrl = supabase.storage.from("memories").getPublicUrl(path).data.publicUrl;
       await supabase.from("memories").insert({
