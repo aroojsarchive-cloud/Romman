@@ -33,7 +33,7 @@ I never knew conversation could heal until I met you. I never knew what leadersh
 Your 25th is special — so you get a mad little web app inspired by pomegranates, built for three, full of memories still to be made — because it all started with a scrapbook and four words that we carry: buy yourself some flowers.
 
 Happy 25th, habibti. Here's to everything that has been and everything yet to come, inshaaAllah.`,
-    sign: "With love,\nArooj",
+    sign: "With love,\nArooj\n\nفي الدنيا والآخرة",
   },
 ];
 
