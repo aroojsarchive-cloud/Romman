@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
@@ -30,44 +30,49 @@ type Album = {
   position: number;
 };
 
-function SortableAlbum({ album, index, onTap, loadMemories }: {
+function SortableAlbum({ album, onTap, loadMemories }: {
   album: Album;
   index: number;
   onTap: (a: Album) => void;
   loadMemories: (id: string) => void;
 }) {
-  const rotations = [-2, 1.5, -1, 2.5, -1.5, 1, -2.5, 2];
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: album.id });
 
   return (
     <div
       ref={setNodeRef}
-      style={{
-        transform: CSS.Transform.toString(transform),
-        transition,
-        opacity: isDragging ? 0.5 : 1,
-        rotate: `${rotations[index % rotations.length]}deg`,
-      }}
+      style={{ transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.4 : 1 }}
       {...attributes}
       {...listeners}
-      className="flex flex-col cursor-grab active:cursor-grabbing"
+      className="flex flex-col items-center cursor-grab active:cursor-grabbing"
       onClick={() => !isDragging && (onTap(album), loadMemories(album.id))}
     >
-      <div className="w-full rounded-sm p-2 pb-8 shadow-sm flex flex-col" style={{ background: "#faf7f2", border: "1px solid #e8ddd0" }}>
-        <div className="w-full aspect-square rounded-sm overflow-hidden mb-1" style={{ background: "#e8ddd0" }}>
+      {/* Frame */}
+      <div className="w-full shadow-lg" style={{
+        background: "#f8f4ee",
+        border: "10px solid #f8f4ee",
+        outline: "1.5px solid #d4c8b0",
+        boxShadow: "0 4px 24px rgba(26,18,16,0.18), inset 0 0 0 1px #e8ddd0",
+      }}>
+        <div className="w-full aspect-[4/5] overflow-hidden" style={{ background: "#e8ddd0" }}>
           {album.cover ? (
             <img src={album.cover} alt="" className="w-full h-full object-cover" />
           ) : (
-            <div className="w-full h-full" />
+            <div className="w-full h-full flex items-center justify-center">
+              <div style={{ width: 1, height: "60%", background: "#c4b8a8" }} />
+            </div>
           )}
         </div>
       </div>
-      <p className="text-[12px] font-semibold mt-2 text-center" style={{ color: "#1a1210", fontFamily: "Georgia, serif", fontStyle: "italic" }}>
-        {album.name}
-      </p>
-      {album.description && (
-        <p className="text-[10px] text-center" style={{ color: "#9b8070" }}>{album.description}</p>
-      )}
+      {/* Art label */}
+      <div className="mt-3 text-center">
+        <p className="text-[13px]" style={{ color: "#1a1210", fontFamily: "Georgia, serif", fontStyle: "italic" }}>
+          {album.name}
+        </p>
+        {album.description && (
+          <p className="text-[10px] mt-0.5 uppercase tracking-[0.15em]" style={{ color: "#9b8070" }}>{album.description}</p>
+        )}
+      </div>
     </div>
   );
 }
@@ -98,6 +103,8 @@ export default function Memories() {
   const [uploading, setUploading] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
   const [selected, setSelected] = useState<Memory | null>(null);
+  const [holdMemory, setHoldMemory] = useState<Memory | null>(null);
+  const holdTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
@@ -176,6 +183,14 @@ export default function Memories() {
       loadAlbums();
     }
     setUploading(false);
+  }
+
+  async function setCover(mem: Memory) {
+    if (!openAlbum) return;
+    const publicUrl = getImageUrl(mem.storage_path);
+    await supabase.from("albums").update({ cover: publicUrl }).eq("id", openAlbum.id);
+    setOpenAlbum({ ...openAlbum, cover: publicUrl });
+    setHoldMemory(null);
   }
 
   // Album list view
@@ -283,33 +298,67 @@ export default function Memories() {
         </div>
       )}
 
-      {/* Scrapbook grid */}
-      <div className="px-4 flex flex-col gap-2">
-        {memories.map((mem, i) => (
-          <button
+      {/* Gallery grid */}
+      <div className="px-5 grid grid-cols-2 gap-5 pb-10">
+        {memories.map((mem) => (
+          <div
             key={mem.id}
-            onClick={() => setSelected(mem)}
-            className="active:opacity-80"
-            style={{ transform: `rotate(${rotations[i % rotations.length]}deg)`, alignSelf: i % 3 === 0 ? "flex-start" : i % 3 === 1 ? "center" : "flex-end", marginLeft: i % 2 === 0 ? "8px" : "0", marginRight: i % 2 !== 0 ? "8px" : "0" }}
+            className="flex flex-col items-center"
+            onMouseDown={() => { holdTimer.current = setTimeout(() => setHoldMemory(mem), 500); }}
+            onMouseUp={() => { if (holdTimer.current) clearTimeout(holdTimer.current); }}
+            onTouchStart={() => { holdTimer.current = setTimeout(() => setHoldMemory(mem), 500); }}
+            onTouchEnd={() => { if (holdTimer.current) clearTimeout(holdTimer.current); }}
+            onClick={() => { if (!holdMemory) setSelected(mem); }}
           >
-            <div className="p-2 pb-8 shadow-md" style={{ background: "#faf7f2", border: "1px solid #e8ddd0", maxWidth: 200 }}>
-              <div className="overflow-hidden" style={{ width: 180, height: 160 }}>
-                <img src={getImageUrl(mem.storage_path)} alt="" className="w-full h-full object-cover" />
-              </div>
-              {mem.caption && (
-                <p className="text-[11px] mt-2 px-1 text-center" style={{ color: "#6b4a3a", fontFamily: "Georgia, serif", fontStyle: "italic" }}>
-                  {mem.caption}
-                </p>
-              )}
-              {mem.taken_at && (
-                <p className="text-[9px] text-center mt-0.5" style={{ color: "#9b8070" }}>
-                  {new Date(mem.taken_at).toLocaleDateString("en-GB", { month: "short", year: "numeric" })}
-                </p>
-              )}
+            <div className="w-full" style={{
+              background: "#f8f4ee",
+              padding: "8px",
+              paddingBottom: "28px",
+              outline: "1px solid #d4c8b0",
+              boxShadow: "0 4px 20px rgba(26,18,16,0.15)",
+            }}>
+              <img src={getImageUrl(mem.storage_path)} alt="" className="w-full object-cover" />
             </div>
-          </button>
+            {mem.caption && (
+              <p className="text-[10px] mt-2 text-center" style={{ color: "#6b4a3a", fontFamily: "Georgia, serif", fontStyle: "italic" }}>
+                {mem.caption}
+              </p>
+            )}
+            {mem.taken_at && (
+              <p className="text-[9px] mt-0.5 uppercase tracking-[0.1em]" style={{ color: "#9b8070" }}>
+                {new Date(mem.taken_at).toLocaleDateString("en-GB", { month: "short", year: "numeric" })}
+              </p>
+            )}
+          </div>
         ))}
       </div>
+
+      {/* Long-press cover menu */}
+      {holdMemory && (
+        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center px-8"
+          style={{ background: "rgba(26,18,16,0.7)" }}
+          onClick={() => setHoldMemory(null)}>
+          <div className="rounded-3xl p-6 flex flex-col gap-3 w-full max-w-xs"
+            style={{ background: "#f5f0eb" }}
+            onClick={(e) => e.stopPropagation()}>
+            <p className="text-[10px] uppercase tracking-[0.25em] text-center mb-1" style={{ color: "#9b8070" }}>photo options</p>
+            <button onClick={() => setCover(holdMemory)}
+              className="w-full rounded-full py-3.5 text-[11px] tracking-[0.2em] uppercase"
+              style={{ background: "#8b1a2a", color: "#f5f0eb" }}>
+              set as cover
+            </button>
+            <button onClick={() => { setSelected(holdMemory); setHoldMemory(null); }}
+              className="w-full rounded-full py-3.5 text-[11px] tracking-[0.2em] uppercase"
+              style={{ background: "#ede8e2", color: "#1a1210" }}>
+              view full
+            </button>
+            <button onClick={() => setHoldMemory(null)}
+              className="text-[12px] text-center mt-1" style={{ color: "#9b8070" }}>
+              cancel
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Full screen memory */}
       {selected && (
