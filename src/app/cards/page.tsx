@@ -19,6 +19,7 @@ May our friendship continue to strengthen. May Allah SWT protect you always and 
 
 Too many more memories together in this life and the next, happy 25th x`,
     sign: "Love,\nHannah / Hani / Trex",
+    arabic: null,
   },
   {
     from: "Arooj",
@@ -33,44 +34,74 @@ I never knew conversation could heal until I met you. I never knew what leadersh
 Your 25th is special — so you get a mad little web app inspired by pomegranates, built for three, full of memories still to be made — because it all started with a scrapbook and four words that we carry: buy yourself some flowers.
 
 Happy 25th, habibti. Here's to everything that has been and everything yet to come, inshaaAllah.`,
-    sign: "With love,\nArooj\n\nفي الدنيا والآخرة",
+    sign: "With love,\nArooj",
+    arabic: "في الدنيا والآخرة",
   },
 ];
 
-function Card({ card }: { card: typeof cards[0] }) {
-  const [opened, setOpened] = useState(false);
+function Envelope({ card }: { card: typeof cards[0] }) {
+  const [state, setState] = useState<"closed" | "opening" | "open">("closed");
+
+  function handleTap() {
+    if (state === "closed") {
+      setState("opening");
+      setTimeout(() => setState("open"), 600);
+    }
+  }
 
   return (
-    <div className="w-full">
-      {!opened ? (
-        /* Envelope */
-        <button
-          onClick={() => setOpened(true)}
-          className="w-full flex flex-col items-center active:scale-[0.98] transition-transform"
-        >
-          <div
-            className="w-full rounded-2xl px-6 py-8 flex flex-col items-center gap-4 shadow-md"
-            style={{ background: "#faf7f2", border: "1px solid #e8ddd0" }}
-          >
-            {/* Wax seal */}
-            <div
-              className="w-12 h-12 rounded-full flex items-center justify-center text-[18px] font-semibold shadow-sm"
-              style={{ background: card.color, color: "#f5f0eb" }}
-            >
-              {card.initial}
-            </div>
-            <div className="text-center">
-              <p className="text-[10px] uppercase tracking-[0.25em] mb-1" style={{ color: "#9b8070" }}>
-                a letter for you
-              </p>
-              <p
-                className="text-[18px]"
-                style={{ color: "#1a1210", fontFamily: "Georgia, serif", fontStyle: "italic" }}
+    <div className="w-full flex flex-col items-center">
+      {state !== "open" ? (
+        <button onClick={handleTap} className="w-full" style={{ perspective: "1000px" }}>
+          {/* Envelope body */}
+          <div className="relative w-full" style={{ paddingTop: "65%" }}>
+            {/* Back of envelope */}
+            <div className="absolute inset-0 rounded-lg shadow-lg overflow-hidden"
+              style={{ background: "#f0e8d8", border: "1px solid #d4c4a8" }}>
+
+              {/* Bottom triangle fold lines */}
+              <svg className="absolute inset-0 w-full h-full" viewBox="0 0 100 65" preserveAspectRatio="none">
+                <line x1="0" y1="65" x2="50" y2="35" stroke="#d4c4a8" strokeWidth="0.5" />
+                <line x1="100" y1="65" x2="50" y2="35" stroke="#d4c4a8" strokeWidth="0.5" />
+                <line x1="0" y1="0" x2="50" y2="35" stroke="#d4c4a8" strokeWidth="0.5" />
+                <line x1="100" y1="0" x2="50" y2="35" stroke="#d4c4a8" strokeWidth="0.5" />
+              </svg>
+
+              {/* Flap */}
+              <div
+                className="absolute top-0 left-0 right-0"
+                style={{
+                  transformOrigin: "top center",
+                  transform: state === "opening" ? "rotateX(-180deg)" : "rotateX(0deg)",
+                  transition: "transform 0.55s ease-in-out",
+                  zIndex: 2,
+                }}
               >
-                from {card.from}
-              </p>
+                <svg viewBox="0 0 100 42" className="w-full" style={{ display: "block" }}>
+                  <polygon points="0,0 100,0 50,42" fill="#e8dcc8" stroke="#d4c4a8" strokeWidth="0.5" />
+                </svg>
+              </div>
+
+              {/* Wax seal */}
+              <div className="absolute inset-0 flex items-center justify-center" style={{ zIndex: 3 }}>
+                <div
+                  className="w-12 h-12 rounded-full flex items-center justify-center text-[18px] font-semibold shadow-md"
+                  style={{
+                    background: card.color,
+                    color: "#f5f0eb",
+                    border: "2px solid rgba(255,255,255,0.2)",
+                  }}
+                >
+                  {card.initial}
+                </div>
+              </div>
             </div>
-            <p className="text-[11px] uppercase tracking-[0.2em]" style={{ color: "#c4b8a8" }}>
+          </div>
+
+          {/* Label */}
+          <div className="mt-3 text-center">
+            <p className="text-[10px] uppercase tracking-[0.25em]" style={{ color: "#9b8070" }}>from {card.from}</p>
+            <p className="text-[12px] mt-1" style={{ color: "#c4b8a8", fontStyle: "italic", fontFamily: "Georgia, serif" }}>
               tap to open
             </p>
           </div>
@@ -78,32 +109,63 @@ function Card({ card }: { card: typeof cards[0] }) {
       ) : (
         /* Open card */
         <div
-          className="w-full rounded-2xl px-6 py-8 shadow-md"
-          style={{ background: "#faf7f2", border: "1px solid #e8ddd0" }}
+          className="w-full rounded-2xl shadow-lg overflow-hidden"
+          style={{
+            background: "#faf6f0",
+            border: "1px solid #e0d4c0",
+            animation: "slideUp 0.4s ease-out",
+          }}
         >
-          <div
-            className="w-8 h-8 rounded-full flex items-center justify-center text-[13px] font-semibold mb-6"
-            style={{ background: card.color, color: "#f5f0eb" }}
-          >
-            {card.initial}
-          </div>
-          {card.message.split("\n\n").map((para, i) => (
+          {/* Card header stripe */}
+          <div className="h-1.5 w-full" style={{ background: card.color }} />
+
+          <div className="px-7 py-8">
+            {/* Seal */}
+            <div
+              className="w-8 h-8 rounded-full flex items-center justify-center text-[12px] font-semibold mb-6"
+              style={{ background: card.color, color: "#f5f0eb" }}
+            >
+              {card.initial}
+            </div>
+
+            {card.message.split("\n\n").map((para, i) => (
+              <p
+                key={i}
+                className="text-[15px] leading-[1.9] mb-5"
+                style={{ color: "#2a1810", fontFamily: "Georgia, serif", fontStyle: "italic" }}
+              >
+                {para}
+              </p>
+            ))}
+
+            {/* Divider */}
+            <div className="my-6" style={{ borderTop: "1px solid #e0d4c0" }} />
+
             <p
-              key={i}
-              className="text-[15px] leading-[1.85] mb-4"
+              className="text-[15px] leading-relaxed whitespace-pre-line"
               style={{ color: "#2a1810", fontFamily: "Georgia, serif", fontStyle: "italic" }}
             >
-              {para}
+              {card.sign}
             </p>
-          ))}
-          <p
-            className="text-[15px] leading-relaxed mt-6 whitespace-pre-line"
-            style={{ color: "#2a1810", fontFamily: "Georgia, serif", fontStyle: "italic" }}
-          >
-            {card.sign}
-          </p>
+
+            {card.arabic && (
+              <p
+                className="text-[18px] mt-4 text-right"
+                style={{ color: card.color, fontFamily: "Georgia, serif", direction: "rtl" }}
+              >
+                {card.arabic}
+              </p>
+            )}
+          </div>
         </div>
       )}
+
+      <style>{`
+        @keyframes slideUp {
+          from { opacity: 0; transform: translateY(20px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
     </div>
   );
 }
@@ -118,19 +180,24 @@ export default function Cards() {
         className="object-cover object-center"
         priority
       />
-      <div className="absolute inset-0" style={{ background: "rgba(245,240,236,0.82)" }} />
+      <div className="absolute inset-0" style={{ background: "rgba(245,240,236,0.85)" }} />
 
       <header className="relative z-10 flex items-center gap-3 px-6 pt-12 pb-6">
         <Link href="/home" className="text-[20px]" style={{ color: "#9b8070" }}>←</Link>
         <div>
           <p className="text-[10px] uppercase tracking-[0.25em]" style={{ color: "#9b8070" }}>for you</p>
-          <h1 className="text-[20px] leading-none font-semibold" style={{ color: "#1a1210" }}>Letters for Sharmin</h1>
+          <h1
+            className="text-[20px] leading-none"
+            style={{ color: "#1a1210", fontFamily: "Georgia, serif", fontStyle: "italic", fontWeight: 400 }}
+          >
+            Letters for Sharmin
+          </h1>
         </div>
       </header>
 
-      <div className="relative z-10 flex flex-col gap-5 px-5">
+      <div className="relative z-10 flex flex-col gap-8 px-6">
         {cards.map((card) => (
-          <Card key={card.from} card={card} />
+          <Envelope key={card.from} card={card} />
         ))}
       </div>
     </div>
