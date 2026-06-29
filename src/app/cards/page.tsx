@@ -27,13 +27,13 @@ Too many more memories together in this life and the next, happy 25th x`,
     color: "#6b4a3a",
     message: `Dear Sharmin,
 
-Words will never do justice to what you are — to how freely you love, how quietly you give, how wholly you show up.
+Words will never do justice to what you are, to how freely you love, how constant you give, how wholly you show up.
 
 I never knew conversation could heal until I met you. I never knew what leadership rooted in tenderness looked like until I witnessed it in you. You have stirred something good in so many of us, and I ask Allah to accept it all and let it weigh heavy on your scale of good deeds.
 
-Your 25th is special — so you get a mad little web app inspired by pomegranates, built for three, full of memories still to be made — because it all started with a scrapbook and four words that we carry: buy yourself some flowers.
+Your 25th is special, it inspired this wild idea, a web app inspired by pomegranates, built for three, full of memories still to be made because it all started with a scrapbook and four words that we carry: buy yourself some flowers.
 
-Happy 25th, habibti. Here's to everything that has been and everything yet to come, inshaaAllah.`,
+Alhamdullilah for everything that has been and everything yet to come, inshaaAllah.`,
     sign: "With love,\nArooj",
     arabic: "في الدنيا والآخرة",
   },
