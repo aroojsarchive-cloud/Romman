@@ -69,6 +69,7 @@ const sections = [
   { label: "Letters", sub: "questions & answers", href: "/words" },
   { label: "Pinned", sub: "our moodboard", href: "/board" },
   { label: "Collected", sub: "for each other", href: "/notes" },
+  { label: "Cards", sub: "for sharmin", href: "/cards" },
 ];
 
 export default function ArchiveHome() {
@@ -117,20 +118,22 @@ export default function ArchiveHome() {
 
       {/* Centred 2x2 grid */}
       <div className="relative z-10 flex-1 flex items-center justify-center px-8 py-6">
-        <div className="grid grid-cols-2 gap-4 w-full max-w-[320px]">
+        <div className="grid grid-cols-2 gap-4 w-full max-w-[320px]" style={{ gridTemplateColumns: "1fr 1fr" }}>
           {sections.map((s) => (
             <Link
               key={s.label}
               href={s.href}
               className="flex flex-col items-center justify-center rounded-2xl active:opacity-80 transition-opacity"
               style={{
-                aspectRatio: "1",
-                background: "rgba(245,235,215,0.15)",
-                border: "1.5px solid rgba(245,235,215,0.3)",
+                aspectRatio: s.label === "Cards" ? "auto" : "1",
+                gridColumn: s.label === "Cards" ? "1 / -1" : undefined,
+                padding: s.label === "Cards" ? "18px" : undefined,
+                background: s.label === "Cards" ? "rgba(139,26,42,0.5)" : "rgba(245,235,215,0.15)",
+                border: s.label === "Cards" ? "1.5px solid rgba(196,64,48,0.4)" : "1.5px solid rgba(245,235,215,0.3)",
                 backdropFilter: "blur(6px)",
               }}
             >
-              <div className="w-2 h-2 rounded-full mb-3" style={{ background: "rgba(196,160,106,0.9)" }} />
+              <div className="w-2 h-2 rounded-full mb-3" style={{ background: s.label === "Cards" ? "rgba(245,208,192,0.9)" : "rgba(196,160,106,0.9)" }} />
               <p className="text-[16px] font-semibold" style={{ color: "#f5f0eb", fontFamily: "Georgia, serif", fontStyle: "italic" }}>
                 {s.label}
               </p>
