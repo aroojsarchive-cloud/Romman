@@ -66,9 +66,8 @@ const quotes = [
 
 const sections = [
   { label: "Memories", sub: "photos & moments", href: "/memories" },
-  { label: "Letters", sub: "questions & answers", href: "/words" },
+  { label: "Collected", sub: "quotes & questions", href: "/words" },
   { label: "Pinned", sub: "our moodboard", href: "/board" },
-  { label: "Collected", sub: "for each other", href: "/notes" },
   { label: "Cards", sub: "for sharmin", href: "/cards" },
 ];
 
@@ -125,15 +124,13 @@ export default function ArchiveHome() {
               href={s.href}
               className="flex flex-col items-center justify-center rounded-2xl active:opacity-80 transition-opacity"
               style={{
-                aspectRatio: s.label === "Cards" ? "auto" : "1",
-                gridColumn: s.label === "Cards" ? "1 / -1" : undefined,
-                padding: s.label === "Cards" ? "18px" : undefined,
-                background: s.label === "Cards" ? "rgba(139,26,42,0.5)" : "rgba(245,235,215,0.15)",
-                border: s.label === "Cards" ? "1.5px solid rgba(196,64,48,0.4)" : "1.5px solid rgba(245,235,215,0.3)",
+                aspectRatio: "1",
+                background: "rgba(245,235,215,0.15)",
+                border: "1.5px solid rgba(245,235,215,0.3)",
                 backdropFilter: "blur(6px)",
               }}
             >
-              <div className="w-2 h-2 rounded-full mb-3" style={{ background: s.label === "Cards" ? "rgba(245,208,192,0.9)" : "rgba(196,160,106,0.9)" }} />
+              <div className="w-2 h-2 rounded-full mb-3" style={{ background: "rgba(196,160,106,0.9)" }} />
               <p className="text-[16px] font-semibold" style={{ color: "#f5f0eb", fontFamily: "Georgia, serif", fontStyle: "italic" }}>
                 {s.label}
               </p>

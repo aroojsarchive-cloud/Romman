@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
@@ -98,13 +98,10 @@ export default function Memories() {
   const [albumName, setAlbumName] = useState("");
   const [albumDesc, setAlbumDesc] = useState("");
   const [showAddPhoto, setShowAddPhoto] = useState(false);
-  const [caption, setCaption] = useState("");
-  const [takenAt, setTakenAt] = useState("");
   const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<{ done: number; total: number } | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
   const [selected, setSelected] = useState<Memory | null>(null);
-  const [holdMemory, setHoldMemory] = useState<Memory | null>(null);
-  const holdTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
@@ -157,48 +154,44 @@ export default function Memories() {
     setAlbumName(""); setAlbumDesc(""); setShowNewAlbum(false);
   }
 
-  async function handlePhotoUpload(file: File) {
-    if (!userId || !openAlbum) return;
+  async function handlePhotoUpload(files: FileList) {
+    if (!userId || !openAlbum || files.length === 0) return;
     setUploading(true);
-    const ext = file.name.split(".").pop();
-    const path = `${openAlbum.id}/${Date.now()}.${ext}`;
-    const { error } = await supabase.storage.from("memories").upload(path, file);
-    if (error) { alert("Upload error: " + error.message); setUploading(false); return; }
-    if (!error) {
+    setUploadProgress({ done: 0, total: files.length });
+    let coverSet = !!openAlbum.cover;
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      const ext = file.name.split(".").pop();
+      const path = `${openAlbum.id}/${Date.now()}-${i}.${ext}`;
+      const { error } = await supabase.storage.from("memories").upload(path, file);
+      if (error) { alert(`Upload error on ${file.name}: ${error.message}`); continue; }
       const publicUrl = supabase.storage.from("memories").getPublicUrl(path).data.publicUrl;
       await supabase.from("memories").insert({
         album_id: openAlbum.id,
         user_id: userId,
         storage_path: path,
-        caption: caption || null,
-        taken_at: takenAt || null,
+        caption: null,
+        taken_at: null,
       });
-      // set album cover if not already set
-      if (!openAlbum.cover) {
+      if (!coverSet) {
         await supabase.from("albums").update({ cover: publicUrl }).eq("id", openAlbum.id);
-        setOpenAlbum({ ...openAlbum, cover: publicUrl });
+        setOpenAlbum((prev) => prev ? { ...prev, cover: publicUrl } : prev);
+        coverSet = true;
       }
-      setCaption(""); setTakenAt(""); setShowAddPhoto(false);
-      loadMemories(openAlbum.id);
-      loadAlbums();
+      setUploadProgress({ done: i + 1, total: files.length });
     }
     setUploading(false);
-  }
-
-  async function setCover(mem: Memory) {
-    if (!openAlbum) return;
-    const publicUrl = getImageUrl(mem.storage_path);
-    await supabase.from("albums").update({ cover: publicUrl }).eq("id", openAlbum.id);
-    setOpenAlbum({ ...openAlbum, cover: publicUrl });
-    setHoldMemory(null);
+    setUploadProgress(null);
+    setShowAddPhoto(false);
+    loadMemories(openAlbum.id);
+    loadAlbums();
   }
 
   // Album list view
   if (!openAlbum) {
     return (
-      <div className="relative min-h-screen flex flex-col pb-10" style={{ background: "#f0ebe3" }}>
-        <Image src="/images/063dba5544b77dec533ae34e9b598236.jpg" alt="" fill className="object-cover object-top" priority />
-        <header className="relative z-10 flex items-center justify-between px-6 pt-12 pb-6">
+      <div className="min-h-screen flex flex-col pb-10" style={{ background: "#f0ebe3" }}>
+        <header className="flex items-center justify-between px-6 pt-12 pb-6">
           <div className="flex items-center gap-3">
             <Link href="/home" className="text-[20px]" style={{ color: "#9b8070" }}>←</Link>
             <div>
@@ -216,7 +209,7 @@ export default function Memories() {
         </header>
 
         {albums.length === 0 && (
-          <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-8 text-center">
+          <div className="flex-1 flex flex-col items-center justify-center px-8 text-center">
             <p className="text-[16px]" style={{ color: "#9b8070", fontStyle: "italic", fontFamily: "Georgia, serif" }}>
               no albums yet — start one
             </p>
@@ -226,7 +219,7 @@ export default function Memories() {
         {/* Album grid — sortable polaroid style */}
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleAlbumDragEnd}>
           <SortableContext items={albums.map((a) => a.id)} strategy={rectSortingStrategy}>
-            <div className="relative z-10 px-6 grid grid-cols-2 gap-6">
+            <div className="px-6 grid grid-cols-2 gap-6">
               {albums.map((album, i) => (
                 <SortableAlbum
                   key={album.id}
@@ -304,11 +297,7 @@ export default function Memories() {
           <div
             key={mem.id}
             className="flex flex-col items-center"
-            onMouseDown={() => { holdTimer.current = setTimeout(() => setHoldMemory(mem), 500); }}
-            onMouseUp={() => { if (holdTimer.current) clearTimeout(holdTimer.current); }}
-            onTouchStart={() => { holdTimer.current = setTimeout(() => setHoldMemory(mem), 500); }}
-            onTouchEnd={() => { if (holdTimer.current) clearTimeout(holdTimer.current); }}
-            onClick={() => { if (!holdMemory) setSelected(mem); }}
+            onClick={() => setSelected(mem)}
           >
             <div className="w-full" style={{
               background: "#f8f4ee",
@@ -332,33 +321,6 @@ export default function Memories() {
           </div>
         ))}
       </div>
-
-      {/* Long-press cover menu */}
-      {holdMemory && (
-        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center px-8"
-          style={{ background: "rgba(26,18,16,0.7)" }}
-          onClick={() => setHoldMemory(null)}>
-          <div className="rounded-3xl p-6 flex flex-col gap-3 w-full max-w-xs"
-            style={{ background: "#f5f0eb" }}
-            onClick={(e) => e.stopPropagation()}>
-            <p className="text-[10px] uppercase tracking-[0.25em] text-center mb-1" style={{ color: "#9b8070" }}>photo options</p>
-            <button onClick={() => setCover(holdMemory)}
-              className="w-full rounded-full py-3.5 text-[11px] tracking-[0.2em] uppercase"
-              style={{ background: "#8b1a2a", color: "#f5f0eb" }}>
-              set as cover
-            </button>
-            <button onClick={() => { setSelected(holdMemory); setHoldMemory(null); }}
-              className="w-full rounded-full py-3.5 text-[11px] tracking-[0.2em] uppercase"
-              style={{ background: "#ede8e2", color: "#1a1210" }}>
-              view full
-            </button>
-            <button onClick={() => setHoldMemory(null)}
-              className="text-[12px] text-center mt-1" style={{ color: "#9b8070" }}>
-              cancel
-            </button>
-          </div>
-        </div>
-      )}
 
       {/* Full screen memory */}
       {selected && (
@@ -389,33 +351,43 @@ export default function Memories() {
 
       {/* Add photo sheet */}
       {showAddPhoto && (
-        <div className="fixed inset-0 z-50 flex flex-col justify-end" style={{ background: "rgba(26,18,16,0.5)" }} onClick={() => setShowAddPhoto(false)}>
+        <div className="fixed inset-0 z-50 flex flex-col justify-end" style={{ background: "rgba(26,18,16,0.5)" }} onClick={() => !uploading && setShowAddPhoto(false)}>
           <div className="rounded-t-3xl p-8 flex flex-col gap-4" style={{ background: "#f5f0eb" }} onClick={(e) => e.stopPropagation()}>
-            <p className="text-[10px] uppercase tracking-[0.25em] text-center mb-2" style={{ color: "#9b8070" }}>add a memory</p>
-            <input value={caption} onChange={(e) => setCaption(e.target.value)} placeholder="caption (optional)"
-              className="w-full rounded-2xl px-5 py-3.5 text-[14px] outline-none"
-              style={{ background: "#ede8e2", color: "#1a1210", border: "1px solid #d4c8b8", fontFamily: "Georgia, serif", fontStyle: "italic" }} />
-            <input type="date" value={takenAt} onChange={(e) => setTakenAt(e.target.value)}
-              className="w-full rounded-2xl px-5 py-3.5 text-[14px] outline-none"
-              style={{ background: "#ede8e2", color: "#9b8070", border: "1px solid #d4c8b8" }} />
-            <div className="relative w-full">
-              <button
-                disabled={uploading}
-                className="w-full rounded-full py-4 text-[11px] tracking-[0.2em] uppercase disabled:opacity-50"
-                style={{ background: "#c43040", color: "#f5f0eb" }}
-              >
-                {uploading ? "uploading…" : "choose photo"}
-              </button>
-              {!uploading && (
+            <p className="text-[10px] uppercase tracking-[0.25em] text-center mb-2" style={{ color: "#9b8070" }}>add memories</p>
+
+            {uploadProgress ? (
+              <div className="flex flex-col items-center gap-3 py-4">
+                <p className="text-[14px]" style={{ color: "#1a1210", fontFamily: "Georgia, serif", fontStyle: "italic" }}>
+                  uploading {uploadProgress.done} of {uploadProgress.total}…
+                </p>
+                <div className="w-full rounded-full h-1.5 overflow-hidden" style={{ background: "#e8e0d5" }}>
+                  <div
+                    className="h-full rounded-full transition-all"
+                    style={{ background: "#8b1a2a", width: `${(uploadProgress.done / uploadProgress.total) * 100}%` }}
+                  />
+                </div>
+              </div>
+            ) : (
+              <div className="relative w-full">
+                <button
+                  className="w-full rounded-full py-4 text-[11px] tracking-[0.2em] uppercase"
+                  style={{ background: "#c43040", color: "#f5f0eb" }}
+                >
+                  choose photos
+                </button>
                 <input
                   type="file"
                   accept="image/*"
+                  multiple
                   className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                  onChange={(e) => { if (e.target.files?.[0]) handlePhotoUpload(e.target.files[0]); }}
+                  onChange={(e) => { if (e.target.files?.length) handlePhotoUpload(e.target.files); }}
                 />
-              )}
-            </div>
-            <button onClick={() => setShowAddPhoto(false)} className="text-[12px] text-center" style={{ color: "#9b8070" }}>cancel</button>
+              </div>
+            )}
+
+            {!uploading && (
+              <button onClick={() => setShowAddPhoto(false)} className="text-[12px] text-center" style={{ color: "#9b8070" }}>cancel</button>
+            )}
           </div>
         </div>
       )}

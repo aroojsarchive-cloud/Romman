@@ -231,8 +231,7 @@ export default function Board() {
   const right = pins.filter((_, i) => i % 2 !== 0);
 
   return (
-    <div className="relative min-h-screen flex flex-col" style={{ background: "#f5f0eb" }}>
-      <Image src="/images/board.jpg" alt="" fill className="object-cover object-center" priority />
+    <div className="min-h-screen flex flex-col" style={{ background: "#f5f0eb" }}>
 
       <header className="relative z-10 flex items-center justify-between px-6 pt-12 pb-4">
         <div className="flex items-center gap-3">

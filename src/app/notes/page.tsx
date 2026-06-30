@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { supabase } from "@/lib/supabase";
 
 type Note = {
@@ -65,25 +64,17 @@ export default function Notes() {
   }
 
   return (
-    <div className="relative min-h-screen flex flex-col">
-      {/* Background */}
-      <Image
-        src="/images/b3ef917ae5a12172dea37ffc715ab1fd.jpg"
-        alt=""
-        fill
-        className="object-cover object-center"
-        priority
-      />
+    <div className="min-h-screen flex flex-col" style={{ background: "#f0ebe3" }}>
 
       {/* Header */}
-      <header className="relative z-10 flex items-center justify-between px-6 pt-12 pb-4">
+      <header className="flex items-center justify-between px-6 pt-12 pb-4">
         <div className="flex items-center gap-3">
-          <Link href="/home" className="text-[20px]" style={{ color: "rgba(245,235,215,0.7)" }}>←</Link>
+          <Link href="/home" className="text-[20px]" style={{ color: "#9b8070" }}>←</Link>
           <div>
-            <p className="text-[10px] uppercase tracking-[0.25em]" style={{ color: "rgba(245,235,215,0.55)" }}>for each other</p>
+            <p className="text-[10px] uppercase tracking-[0.25em]" style={{ color: "#9b8070" }}>for each other</p>
             <h1
               className="text-[22px] leading-none"
-              style={{ color: "#f5f0eb", fontFamily: "Georgia, serif", fontStyle: "italic", fontWeight: 400 }}
+              style={{ color: "#1a1210", fontFamily: "Georgia, serif", fontStyle: "italic", fontWeight: 400 }}
             >
               Collected
             </h1>
@@ -92,19 +83,19 @@ export default function Notes() {
         <button
           onClick={() => setShowWrite(true)}
           className="rounded-full px-4 py-2 text-[11px] uppercase tracking-[0.15em]"
-          style={{ background: "rgba(139,26,42,0.85)", color: "#f5f0eb", border: "1px solid rgba(196,64,48,0.4)" }}
+          style={{ background: "#8b1a2a", color: "#f5f0eb" }}
         >
           + write
         </button>
       </header>
 
       {/* Notes list */}
-      <div className="relative z-10 flex-1 px-5 pb-24 flex flex-col gap-4 pt-2">
+      <div className="flex-1 px-5 pb-24 flex flex-col gap-4 pt-2">
         {notes.length === 0 && (
           <div className="flex-1 flex flex-col items-center justify-center text-center py-24">
             <p
               className="text-[18px] leading-relaxed"
-              style={{ color: "rgba(245,235,215,0.55)", fontFamily: "Georgia, serif", fontStyle: "italic" }}
+              style={{ color: "#9b8070", fontFamily: "Georgia, serif", fontStyle: "italic" }}
             >
               nothing written yet —<br />leave the first note
             </p>
@@ -120,11 +111,7 @@ export default function Notes() {
             <div
               key={note.id}
               className="rounded-2xl px-5 py-5 relative"
-              style={{
-                background: "rgba(245,235,215,0.1)",
-                border: "1px solid rgba(245,235,215,0.18)",
-                backdropFilter: "blur(8px)",
-              }}
+              style={{ background: "#e8e0d5", border: "1px solid #d4c8b8" }}
             >
               {/* Author dot */}
               <div className="flex items-center gap-2 mb-3">
@@ -134,10 +121,10 @@ export default function Notes() {
                 >
                   {initial}
                 </div>
-                <span className="text-[11px]" style={{ color: "rgba(245,235,215,0.5)" }}>
+                <span className="text-[11px]" style={{ color: "#9b8070" }}>
                   {note.profiles?.name ?? ""}
                 </span>
-                <span className="text-[10px] ml-auto" style={{ color: "rgba(245,235,215,0.35)" }}>
+                <span className="text-[10px] ml-auto" style={{ color: "#c4b8a8" }}>
                   {formatDate(note.created_at)}
                 </span>
               </div>
@@ -145,7 +132,7 @@ export default function Notes() {
               {/* Body */}
               <p
                 className="text-[16px] leading-[1.75]"
-                style={{ color: "#f5ede0", fontFamily: "Georgia, serif", fontStyle: "italic" }}
+                style={{ color: "#2a1810", fontFamily: "Georgia, serif", fontStyle: "italic" }}
               >
                 {note.body}
               </p>
@@ -155,7 +142,7 @@ export default function Notes() {
                 <button
                   onClick={() => handleDelete(note.id, note.user_id)}
                   className="mt-3 text-[10px] uppercase tracking-wide"
-                  style={{ color: "rgba(196,64,48,0.6)" }}
+                  style={{ color: "#c43030" }}
                 >
                   remove
                 </button>
