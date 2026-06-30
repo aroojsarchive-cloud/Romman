@@ -25,8 +25,9 @@ type Quote = {
   text: string;
   attribution: string | null;
   created_at: string;
-  profiles?: { initial: string; name: string };
 };
+
+type Profile = { id: string; initial: string; name: string };
 
 const byColor: Record<string, string> = {
   S: "#8b1a2a",
@@ -38,6 +39,7 @@ export default function Collected() {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [answers, setAnswers] = useState<Answer[]>([]);
   const [quotes, setQuotes] = useState<Quote[]>([]);
+  const [profiles, setProfiles] = useState<Profile[]>([]);
   const [userId, setUserId] = useState<string | null>(null);
   const [currentWeek, setCurrentWeek] = useState(1);
 
@@ -72,10 +74,14 @@ export default function Collected() {
     }
     if (aRes.data) setAnswers(aRes.data as Answer[]);
 
-    // quotes table may not exist yet — load separately so it never blocks the rest
+    // load profiles for author display
+    const profRes = await supabase.from("profiles").select("id, initial, name");
+    if (profRes.data) setProfiles(profRes.data as Profile[]);
+
+    // quotes — no join, match profiles client-side
     const quotesRes = await supabase
       .from("quotes")
-      .select("*, profiles(initial, name)")
+      .select("*")
       .order("created_at", { ascending: false });
     if (quotesRes.data) setQuotes(quotesRes.data as Quote[]);
   }
@@ -210,7 +216,8 @@ export default function Collected() {
         <div className="px-5 flex flex-col gap-3 mb-6">
           <p className="text-[10px] uppercase tracking-[0.25em] mb-1" style={{ color: "#9b8070" }}>quotes</p>
           {quotes.map((q) => {
-            const initial = q.profiles?.initial ?? "?";
+            const profile = profiles.find((p) => p.id === q.user_id);
+            const initial = profile?.initial ?? "?";
             const isOwn = q.user_id === userId;
             return (
               <div key={q.id} className="rounded-2xl px-5 py-5" style={{ background: "#e8e0d5", border: "1px solid #d4c8b8" }}>
