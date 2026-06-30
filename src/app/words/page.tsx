@@ -99,17 +99,19 @@ export default function Collected() {
   }
 
   async function handleSaveQuote() {
-    if (!userId || !quoteText.trim()) return;
+    if (!quoteText.trim()) return;
+    if (!userId) { alert("Not signed in — please sign out and back in."); return; }
     setSavingQuote(true);
-    await supabase.from("quotes").insert({
+    const { error } = await supabase.from("quotes").insert({
       user_id: userId,
       text: quoteText.trim(),
       attribution: quoteAttribution.trim() || null,
     });
+    setSavingQuote(false);
+    if (error) { alert("Could not save quote: " + error.message); return; }
     setQuoteText("");
     setQuoteAttribution("");
     setShowQuoteSheet(false);
-    setSavingQuote(false);
     loadAll();
   }
 
