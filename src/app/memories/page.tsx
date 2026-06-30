@@ -57,21 +57,32 @@ export default function Memories() {
   }
 
   async function handleUpload(files: FileList) {
-    if (!userId || files.length === 0) return;
+    if (!userId) { alert("Not signed in."); return; }
+    if (files.length === 0) return;
     setUploading(true);
     setUploadProgress({ done: 0, total: files.length });
 
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
-      const ext = file.name.split(".").pop();
-      const path = `gallery/${Date.now()}-${i}.${ext}`;
-      const { error } = await supabase.storage.from("memories").upload(path, file);
-      if (error) { alert(`Upload error on ${file.name}: ${error.message}`); continue; }
-      await supabase.from("memories").insert({
+      const ext = (file.name.split(".").pop() ?? "jpg").toLowerCase();
+      const path = `gallery/${userId}-${Date.now()}-${i}.${ext}`;
+
+      const { error: storageError } = await supabase.storage.from("memories").upload(path, file);
+      if (storageError) {
+        alert(`Photo ${i + 1} failed to upload: ${storageError.message}`);
+        setUploadProgress({ done: i + 1, total: files.length });
+        continue;
+      }
+
+      const { error: dbError } = await supabase.from("memories").insert({
         user_id: userId,
         storage_path: path,
         caption: null,
       });
+      if (dbError) {
+        alert(`Photo ${i + 1} saved to storage but failed to record: ${dbError.message}`);
+      }
+
       setUploadProgress({ done: i + 1, total: files.length });
     }
 
