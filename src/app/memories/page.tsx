@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 
@@ -23,6 +23,8 @@ export default function Memories() {
   const [memories, setMemories] = useState<Memory[]>([]);
   const [userId, setUserId] = useState<string | null>(null);
   const [selected, setSelected] = useState<Memory | null>(null);
+  const [holdMemory, setHoldMemory] = useState<Memory | null>(null);
+  const holdTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<{ done: number; total: number } | null>(null);
   const [showUpload, setShowUpload] = useState(false);
@@ -44,6 +46,14 @@ export default function Memories() {
 
   function getImageUrl(path: string) {
     return supabase.storage.from("memories").getPublicUrl(path).data.publicUrl;
+  }
+
+  async function handleDelete(mem: Memory) {
+    if (mem.user_id !== userId) return;
+    await supabase.storage.from("memories").remove([mem.storage_path]);
+    await supabase.from("memories").delete().eq("id", mem.id);
+    setHoldMemory(null);
+    loadMemories();
   }
 
   async function handleUpload(files: FileList) {
@@ -105,7 +115,11 @@ export default function Memories() {
           <div
             key={mem.id}
             className="flex flex-col items-center cursor-pointer active:opacity-80"
-            onClick={() => setSelected(mem)}
+            onMouseDown={() => { holdTimer.current = setTimeout(() => setHoldMemory(mem), 500); }}
+            onMouseUp={() => { if (holdTimer.current) clearTimeout(holdTimer.current); }}
+            onTouchStart={() => { holdTimer.current = setTimeout(() => setHoldMemory(mem), 500); }}
+            onTouchEnd={() => { if (holdTimer.current) clearTimeout(holdTimer.current); }}
+            onClick={() => { if (!holdMemory) setSelected(mem); }}
           >
             <div className="w-full" style={{
               background: "#f8f4ee",
@@ -119,6 +133,45 @@ export default function Memories() {
           </div>
         ))}
       </div>
+
+      {/* Long-press delete overlay */}
+      {holdMemory && (
+        <div
+          className="fixed inset-0 z-50 flex flex-col items-center justify-center px-8"
+          style={{ background: "rgba(26,18,16,0.7)" }}
+          onClick={() => setHoldMemory(null)}
+        >
+          <div
+            className="rounded-3xl p-6 flex flex-col gap-3 w-full max-w-xs"
+            style={{ background: "#f5f0eb" }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="w-full aspect-square overflow-hidden rounded-xl mb-1">
+              <img src={getImageUrl(holdMemory.storage_path)} alt="" className="w-full h-full object-cover" />
+            </div>
+            {holdMemory.user_id === userId ? (
+              <button
+                onClick={() => handleDelete(holdMemory)}
+                className="w-full rounded-full py-3.5 text-[11px] tracking-[0.2em] uppercase"
+                style={{ background: "#c43030", color: "#f5f0eb" }}
+              >
+                delete
+              </button>
+            ) : (
+              <p className="text-center text-[12px]" style={{ color: "#9b8070" }}>
+                you can only delete your own photos
+              </p>
+            )}
+            <button
+              onClick={() => setHoldMemory(null)}
+              className="text-[12px] text-center"
+              style={{ color: "#9b8070" }}
+            >
+              cancel
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Upload sheet */}
       {showUpload && (
