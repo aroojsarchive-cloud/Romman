@@ -25,6 +25,7 @@ export default function Memories() {
   const [selected, setSelected] = useState<Memory | null>(null);
   const [holdMemory, setHoldMemory] = useState<Memory | null>(null);
   const holdTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<{ done: number; total: number } | null>(null);
   const [showUpload, setShowUpload] = useState(false);
@@ -213,21 +214,23 @@ export default function Memories() {
                 </div>
               </div>
             ) : (
-              <div className="relative w-full">
-                <button
-                  className="w-full rounded-full py-4 text-[11px] tracking-[0.2em] uppercase"
-                  style={{ background: "#8b1a2a", color: "#f5f0eb" }}
-                >
-                  choose photos
-                </button>
+              <>
                 <input
+                  ref={fileInputRef}
                   type="file"
                   accept="image/*"
                   multiple
-                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                  className="hidden"
                   onChange={(e) => { if (e.target.files?.length) handleUpload(e.target.files); }}
                 />
-              </div>
+                <button
+                  className="w-full rounded-full py-4 text-[11px] tracking-[0.2em] uppercase"
+                  style={{ background: "#8b1a2a", color: "#f5f0eb" }}
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  choose photos
+                </button>
+              </>
             )}
 
             {!uploading && (
