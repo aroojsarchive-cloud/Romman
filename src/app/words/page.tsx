@@ -61,10 +61,9 @@ export default function Collected() {
   }, []);
 
   async function loadAll() {
-    const [qRes, aRes, quotesRes] = await Promise.all([
+    const [qRes, aRes] = await Promise.all([
       supabase.from("questions").select("*").order("week_number"),
       supabase.from("answers").select("*, profiles(initial, name)"),
-      supabase.from("quotes").select("*, profiles(initial, name)").order("created_at", { ascending: false }),
     ]);
     if (qRes.data) {
       setQuestions(qRes.data);
@@ -72,6 +71,12 @@ export default function Collected() {
       setCurrentWeek(Math.min(weeksSinceStart, qRes.data.length || 1));
     }
     if (aRes.data) setAnswers(aRes.data as Answer[]);
+
+    // quotes table may not exist yet — load separately so it never blocks the rest
+    const quotesRes = await supabase
+      .from("quotes")
+      .select("*, profiles(initial, name)")
+      .order("created_at", { ascending: false });
     if (quotesRes.data) setQuotes(quotesRes.data as Quote[]);
   }
 
